@@ -22,5 +22,5 @@ public:
 	void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
 
 	void Clear();
-	void SetClearColor();
+	void SetClearColor(float r, float g, float b);
 };

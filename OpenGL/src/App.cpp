@@ -6,6 +6,8 @@
 #include <string>
 #include <sstream>
 
+#include <Windows.h>
+
 #include "Renderer.h"
 
 #include "VertexArray.h"
@@ -18,6 +20,7 @@
 #include "tests/Test.h"
 #include "tests/TestClearColor.h"
 #include "tests/TestTexture2D.h"
+#include "tests/TestMesh.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -34,9 +37,12 @@ int main(void) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	
+
+	int windowWidth = GetSystemMetrics(SM_CXSCREEN)/2;
+	int windowHeight = GetSystemMetrics(SM_CYSCREEN)/2;
+
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+	window = glfwCreateWindow(windowWidth, windowHeight, "Hello World", NULL, NULL);
 	if (!window) {
 		glfwTerminate();
 		return -1;
@@ -64,12 +70,19 @@ int main(void) {
 
 		ImGui::StyleColorsDark();
 
+		ImGuiStyle& style = ImGui::GetStyle();
+		style.ScaleAllSizes(5.0f);
+
+		ImGuiIO& io = ImGui::GetIO();
+		io.FontGlobalScale = 4.0;
+
 		Test::Test* currentTest = NULL;
 		Test::TestMenu* testMenu = new Test::TestMenu(currentTest);
 		currentTest = testMenu;
 
 		testMenu->RegisterTest<Test::TestClearColor>("Clear Color");
 		testMenu->RegisterTest<Test::TestTexture2D>("Texture 2D");
+		testMenu->RegisterTest<Test::TestMesh>("Basic Mesh");
 
 
 		while (!glfwWindowShouldClose(window)) {
@@ -90,6 +103,7 @@ int main(void) {
 				ImGui::End();
 			}
 
+			ImGui::SetWindowSize(ImVec2((float)800, (float)800));
 
 			ImGui::Render();
 			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());

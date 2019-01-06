@@ -12,18 +12,18 @@ Mesh::Mesh(const std::string& filepath) : m_Filepath(filepath) {
 	ParseMeshFile(filepath);
 
 	/* Compile vertex attributes (position, normal, texture coordinates, etc.) into the vertex array */
-	int numVertices = m_Positions.size() / m_Dimensions;
+	int numVertices = m_VertexIndexMap_PositionNormal.size();
 	m_Vertices.reserve(m_Positions.size() + m_Normals.size() + m_TextureCoordinates.size());
+	
 	
 	//std::vector<float>::iterator posIter;
 	bool insertNormalsFlag = m_Normals.size() > 0;
 	bool insertTextureCoordsFlag = m_TextureCoordinates.size() > 0;
 	for (int i = 0; i < numVertices; i++) {
-
 		m_Vertices.insert(m_Vertices.end(), m_Positions.begin() + (i * m_Dimensions), m_Positions.begin() + (i * m_Dimensions) + m_Dimensions);
-		
+
 		if (insertNormalsFlag) {
-			int j = m_NormalIndices[i];
+			int j = m_VertexIndexMap_PositionNormal[i];
 			glm::vec3 normal = glm::normalize(glm::vec3(m_Normals[j * 3], m_Normals[j * 3 + 1], m_Normals[j * 3 + 2]));
 
 			m_Vertices.push_back(normal.x);
@@ -164,6 +164,14 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 
 			}
 		}
+
+		/* Map position and normal indices based on the face data */
+		for (int i = 0; i < m_PositionIndices.size(); i++) {
+			if (m_VertexIndexMap_PositionNormal.find(m_PositionIndices[i]) == m_VertexIndexMap_PositionNormal.end()) {
+				m_VertexIndexMap_PositionNormal[m_PositionIndices[i]] = m_NormalIndices[i];
+			}
+		}
+		
 
 		auto end = std::chrono::high_resolution_clock::now();
 

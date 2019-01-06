@@ -7,6 +7,8 @@
 #include "VertexBufferLayout.h"
 #include "Texture.h"
 
+#include "Camera.h"
+
 namespace Test {
 
 	class TestMesh : public Test {
@@ -29,8 +31,9 @@ namespace Test {
 		glm::mat4 m_Proj, m_View;
 		float m_ViewPortWidth, m_ViewPortHeight, m_AspectRatio;
 
-		glm::vec3 m_CameraPosisition, m_CameraDirection, m_CameraRight, m_CameraUp;
-		glm::mat4 m_CameraLookAt;
+		bool m_NormalVisualizationFlag = false;
+
+
 	};
 
 }

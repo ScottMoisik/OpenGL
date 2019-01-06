@@ -15,7 +15,7 @@ namespace Test {
 		m_View(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f))),
 		m_Translation(0.0f, 0.0f, 0.0f), m_LightPosition(0.0f, 10.0f, 10.0f) {
 		
-
+		
 		GLint m_viewport[4];
 		GLCall(glGetIntegerv(GL_VIEWPORT, m_viewport));
 		m_ViewPortWidth = (float)m_viewport[2];
@@ -49,7 +49,6 @@ namespace Test {
 	TestMesh::~TestMesh() {}
 	void TestMesh::OnUpdate(float deltaTime) {}
 	void TestMesh::OnRender() {
-		
 		GLCall(glClearColor(0.2f, 0.2f, 0.6f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 		
@@ -59,6 +58,12 @@ namespace Test {
 		m_Proj = glm::perspective(glm::radians(45.0f), m_AspectRatio, 0.1f, 100.0f);
 		{
 			using namespace glm;
+
+			/* Camera processing */
+			m_Proj = glm::perspective(glm::radians(m_Camera->Zoom), m_Camera->m_AspectRatio, 0.1f, 100.0f);
+			m_View = m_Camera->GetViewMatrix();
+
+			/* Set uniforms for the basic shader */
 			mat4 model = translate(mat4(1.0f), m_Translation);
 			model = rotate(model, radians(m_Rotation), vec3(0.0f, 1.0f, 0.0f));
 			mat4 MVP = m_Proj * m_View * model; //GLM is column-major memory layout so requires reverse multiplication for MVP
@@ -67,16 +72,20 @@ namespace Test {
 			m_Shader->SetUniformMat4f("u_MVP", MVP);
 			m_Shader->SetUniform3f("u_LightPosition", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
 
-			/* Set uniforms for the normal visualizing shader */
-			m_NormalVisualizingShader->Bind();
-			m_NormalVisualizingShader->SetUniformMat4f("u_Proj", m_Proj);
-			m_NormalVisualizingShader->SetUniformMat4f("u_View", m_View);
-			m_NormalVisualizingShader->SetUniformMat4f("u_Model", model);
-			m_NormalVisualizingShader->SetUniformMat4f("u_MVP", MVP);
-
-			/* Do the draw calls for each shader */
+			/* Do draw call for mesh shader*/
 			m_Mesh->Draw(*m_Shader);
-			//m_Mesh->Draw(*m_NormalVisualizingShader);
+
+			if (m_NormalVisualizationFlag) { 
+				/* Set uniforms for the normal visualizing shader */
+				m_NormalVisualizingShader->Bind();
+				m_NormalVisualizingShader->SetUniformMat4f("u_Proj", m_Proj);
+				m_NormalVisualizingShader->SetUniformMat4f("u_View", m_View);
+				m_NormalVisualizingShader->SetUniformMat4f("u_Model", model);
+				m_NormalVisualizingShader->SetUniformMat4f("u_MVP", MVP);
+
+				/* Do draw call for normal visualizing shader*/
+				m_Mesh->Draw(*m_NormalVisualizingShader); 
+			}
 			//renderer.Draw(*m_VAO, *m_IndexBuffer, *m_Shader);
 		}
 
@@ -85,6 +94,7 @@ namespace Test {
 		ImGui::SliderFloat3("translation", &m_Translation.x, -20.0f, 20.0f);
 		ImGui::SliderFloat("rotation", &m_Rotation, -180.0f, 180.0f);
 		ImGui::SliderFloat3("light_position", &m_LightPosition.x, -20.0f, 20.0f);
+		ImGui::Checkbox("normal visualization", &m_NormalVisualizationFlag);
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 	}

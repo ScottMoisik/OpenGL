@@ -1,7 +1,10 @@
 #pragma once
 
+
 #include <vector>
 #include <functional>
+
+class Camera;
 
 namespace Test {
 
@@ -13,6 +16,9 @@ namespace Test {
 		virtual void OnUpdate(float deltaTime) {}
 		virtual void OnRender() {}
 		virtual void OnImGuiRender() {}
+		void SetCamera(Camera* camera) { m_Camera = camera; }
+	protected:
+		Camera* m_Camera;
 	};
 
 

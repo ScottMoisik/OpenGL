@@ -33,6 +33,8 @@ private:
 	std::vector<float> m_Normals;
 	std::vector<float> m_TextureCoordinates;
 	std::vector<float> m_Vertices;
+	std::unordered_map<int, int> m_VertexIndexMap_PositionNormal;
+	std::unordered_map<int, int> m_VertexIndexMap_PositionTexture;
 
 	std::vector<unsigned int> m_PositionIndices;
 	std::vector<unsigned int> m_TextureIndices;

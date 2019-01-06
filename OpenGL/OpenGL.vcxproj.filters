@@ -469,6 +469,7 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="res\shaders\BasicMesh.shader" />
+    <None Include="res\shaders\NormalVisualization.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">
@@ -1257,8 +1258,5 @@
     <ClInclude Include="src\tests\TestMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Object Include="res\meshes\suzanne.obj" />
   </ItemGroup>
 </Project>

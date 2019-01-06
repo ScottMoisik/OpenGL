@@ -38,11 +38,11 @@ int main(void) {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	int windowWidth = GetSystemMetrics(SM_CXSCREEN)/2;
-	int windowHeight = GetSystemMetrics(SM_CYSCREEN)/2;
+	int windowWidth = 3*GetSystemMetrics(SM_CXSCREEN)/4;
+	int windowHeight = 3*GetSystemMetrics(SM_CYSCREEN)/4;
 
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(windowWidth, windowHeight, "Hello World", NULL, NULL);
+	window = glfwCreateWindow(windowWidth, windowHeight, "OpenGL Development", NULL, NULL);
 	if (!window) {
 		glfwTerminate();
 		return -1;

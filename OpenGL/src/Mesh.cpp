@@ -11,14 +11,43 @@
 Mesh::Mesh(const std::string& filepath) : m_Filepath(filepath) {
 	ParseMeshFile(filepath);
 
+	/* Compile vertex attributes (position, normal, texture coordinates, etc.) into the vertex array */
+	int numVertices = m_Positions.size() / m_Dimensions;
+	m_Vertices.reserve(m_Positions.size() + m_Normals.size() + m_TextureCoordinates.size());
+	
+	//std::vector<float>::iterator posIter;
+	bool insertNormalsFlag = m_Normals.size() > 0;
+	bool insertTextureCoordsFlag = m_TextureCoordinates.size() > 0;
+	for (int i = 0; i < numVertices; i++) {
+
+		m_Vertices.insert(m_Vertices.end(), m_Positions.begin() + (i * m_Dimensions), m_Positions.begin() + (i * m_Dimensions) + m_Dimensions);
+		
+		if (insertNormalsFlag) {
+			int j = m_NormalIndices[i];
+			glm::vec3 normal = glm::normalize(glm::vec3(m_Normals[j * 3], m_Normals[j * 3 + 1], m_Normals[j * 3 + 2]));
+
+			m_Vertices.push_back(normal.x);
+			m_Vertices.push_back(normal.y);
+			m_Vertices.push_back(normal.z);
+		}
+
+		if (insertTextureCoordsFlag) {
+			m_Vertices.insert(m_Vertices.end(), m_TextureCoordinates.begin() + (i * m_Dimensions), m_TextureCoordinates.begin() + (i * m_Dimensions) + m_Dimensions);
+		}
+	}
+	
+
 	m_VAO = std::make_unique<VertexArray>();
-	m_VertexBuffer = std::make_unique<VertexBuffer>(&m_Positions[0], m_Positions.size() * m_Dimensions * sizeof(float));
+	m_VertexBuffer = std::make_unique<VertexBuffer>(&m_Vertices[0], 
+		numVertices * (m_Dimensions + 3*insertNormalsFlag + 2*insertTextureCoordsFlag) * sizeof(float));
 	m_IndexBuffer = std::make_unique<IndexBuffer>(&m_PositionIndices[0], m_PositionIndices.size());
 
-	GLCall(glBufferData(GL_ARRAY_BUFFER, m_Positions.size() * m_Dimensions * sizeof(float), &m_Positions[0], GL_STATIC_DRAW));
-
 	VertexBufferLayout layout;
-	layout.Push<float>(3);
+	layout.Push<float>(m_Dimensions);
+	if (insertNormalsFlag)
+		layout.Push<float>(3);
+	if (insertTextureCoordsFlag)
+		layout.Push<float>(2);
 	m_VAO->AddBuffer(*m_VertexBuffer, layout);
 }
 
@@ -108,15 +137,16 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 							int firstSlash = token.find("/");
 							int secondSlash = token.find("/", firstSlash + 1);
 
+							/* Store indices, subtracting 1 because Wavefront .OBJ indices start at 1*/
 							if (secondSlash - firstSlash != 1) {
 								std::string textureIndex = token.substr(firstSlash + 1, secondSlash - firstSlash);
-								m_TextureIndices.push_back(std::stoi(textureIndex));
+								m_TextureIndices.push_back(std::stoi(textureIndex) - 1);
 							} else {
 								std::string vertexIndex = token.substr(0, firstSlash + 1);
-								m_PositionIndices.push_back(std::stoi(vertexIndex));
+								m_PositionIndices.push_back(std::stoi(vertexIndex) - 1);
 
 								std::string normalIndex = token.substr(secondSlash + 1);
-								m_NormalIndices.push_back(std::stoi(normalIndex));
+								m_NormalIndices.push_back(std::stoi(normalIndex) - 1);
 							}
 						}
 					}

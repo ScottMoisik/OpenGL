@@ -104,6 +104,7 @@
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
     <None Include="res\shaders\BasicMesh.shader" />
+    <None Include="res\shaders\NormalVisualization.shader" />
     <None Include="src\vendor\glm\detail\func_common.inl" />
     <None Include="src\vendor\glm\detail\func_common_simd.inl" />
     <None Include="src\vendor\glm\detail\func_exponential.inl" />
@@ -499,9 +500,6 @@
     <ClInclude Include="src\VertexBufferLayout.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\tests\TestMesh.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Object Include="res\meshes\suzanne.obj" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

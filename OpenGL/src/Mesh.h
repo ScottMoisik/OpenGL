@@ -31,7 +31,9 @@ private:
 	unsigned int m_Dimensions = 0;
 	std::vector<float> m_Positions;
 	std::vector<float> m_Normals;
-	//std::vector<Vertex> m_Vertices;
+	std::vector<float> m_TextureCoordinates;
+	std::vector<float> m_Vertices;
+
 	std::vector<unsigned int> m_PositionIndices;
 	std::vector<unsigned int> m_TextureIndices;
 	std::vector<unsigned int> m_NormalIndices;

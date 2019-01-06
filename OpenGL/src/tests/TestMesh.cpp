@@ -40,9 +40,14 @@ namespace Test {
 		m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualization.shader");
 		m_NormalVisualizingShader->Bind();
 
+		/* TEST AREA */
+		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::EIGHTHS);
+
+		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SIXTEENTHS);
+		m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::res256);
 
 
-		m_Mesh = std::make_unique<Mesh>("res/meshes/suzanne.obj");
+		//m_Mesh = std::make_unique<Mesh>("res/meshes/suzanne.obj");
 	}
 
 

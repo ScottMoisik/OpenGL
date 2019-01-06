@@ -28,6 +28,7 @@
 #include "imgui/imgui_impl_glfw_gl3.h"
 #include "App.h"
 
+#include "Mesh.h"
 
 /* Forward declarations of camera-related input callbacks */
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -56,7 +57,7 @@ int main(void) {
 	int windowHeight = 3 * GetSystemMetrics(SM_CYSCREEN) / 4;
 
 
-	
+
 	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(windowWidth, windowHeight, "OpenGL Development", NULL, NULL);
 	if (!window) {
@@ -91,7 +92,7 @@ int main(void) {
 
 		// Setup Dear ImGui context
 		ImGui::CreateContext();
-		ImGui_ImplGlfwGL3_Init(window, true);
+		ImGui_ImplGlfwGL3_Init(window, false);
 
 		ImGui::StyleColorsDark();
 

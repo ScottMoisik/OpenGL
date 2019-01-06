@@ -5,50 +5,13 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <cmath>
 
 #include "VertexBufferLayout.h"
 
 Mesh::Mesh(const std::string& filepath) : m_Filepath(filepath) {
 	ParseMeshFile(filepath);
-
-	/* Compile vertex attributes (position, normal, texture coordinates, etc.) into the vertex array */
-	int numVertices = m_VertexIndexMap_PositionNormal.size();
-	m_Vertices.reserve(m_Positions.size() + m_Normals.size() + m_TextureCoordinates.size());
-	
-	
-	//std::vector<float>::iterator posIter;
-	bool insertNormalsFlag = m_Normals.size() > 0;
-	bool insertTextureCoordsFlag = m_TextureCoordinates.size() > 0;
-	for (int i = 0; i < numVertices; i++) {
-		m_Vertices.insert(m_Vertices.end(), m_Positions.begin() + (i * m_Dimensions), m_Positions.begin() + (i * m_Dimensions) + m_Dimensions);
-
-		if (insertNormalsFlag) {
-			int j = m_VertexIndexMap_PositionNormal[i];
-			glm::vec3 normal = glm::normalize(glm::vec3(m_Normals[j * 3], m_Normals[j * 3 + 1], m_Normals[j * 3 + 2]));
-
-			m_Vertices.push_back(normal.x);
-			m_Vertices.push_back(normal.y);
-			m_Vertices.push_back(normal.z);
-		}
-
-		if (insertTextureCoordsFlag) {
-			m_Vertices.insert(m_Vertices.end(), m_TextureCoordinates.begin() + (i * m_Dimensions), m_TextureCoordinates.begin() + (i * m_Dimensions) + m_Dimensions);
-		}
-	}
-	
-
-	m_VAO = std::make_unique<VertexArray>();
-	m_VertexBuffer = std::make_unique<VertexBuffer>(&m_Vertices[0], 
-		numVertices * (m_Dimensions + 3*insertNormalsFlag + 2*insertTextureCoordsFlag) * sizeof(float));
-	m_IndexBuffer = std::make_unique<IndexBuffer>(&m_PositionIndices[0], m_PositionIndices.size());
-
-	VertexBufferLayout layout;
-	layout.Push<float>(m_Dimensions);
-	if (insertNormalsFlag)
-		layout.Push<float>(3);
-	if (insertTextureCoordsFlag)
-		layout.Push<float>(2);
-	m_VAO->AddBuffer(*m_VertexBuffer, layout);
+	SetupMesh();	
 }
 
 Mesh::~Mesh() {
@@ -82,6 +45,10 @@ void Mesh::Draw(const Shader& shader) {
 	Renderer renderer;
 	renderer.Draw(*m_VAO, *m_IndexBuffer, shader);
 }
+
+
+
+
 
 
 enum AttributeType { NONE, POSITION, VERTEX_NORMAL, FACE };
@@ -183,7 +150,45 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 }
 
 
+void Mesh::SetupMesh() {
+	/* Compile vertex attributes (position, normal, texture coordinates, etc.) into the vertex array */
+	int numVertices = m_VertexIndexMap_PositionNormal.size();
+	m_Vertices.reserve(m_Positions.size() + m_Normals.size() + m_TextureCoordinates.size());
 
+	//std::vector<float>::iterator posIter;
+	bool insertNormalsFlag = m_Normals.size() > 0;
+	bool insertTextureCoordsFlag = m_TextureCoordinates.size() > 0;
+	for (int i = 0; i < numVertices; i++) {
+		m_Vertices.insert(m_Vertices.end(), m_Positions.begin() + (i * m_Dimensions), m_Positions.begin() + (i * m_Dimensions) + m_Dimensions);
+
+		if (insertNormalsFlag) {
+			int j = m_VertexIndexMap_PositionNormal[i];
+			glm::vec3 normal = glm::normalize(glm::vec3(m_Normals[j * 3], m_Normals[j * 3 + 1], m_Normals[j * 3 + 2]));
+
+			m_Vertices.push_back(normal.x);
+			m_Vertices.push_back(normal.y);
+			m_Vertices.push_back(normal.z);
+		}
+
+		if (insertTextureCoordsFlag) {
+			m_Vertices.insert(m_Vertices.end(), m_TextureCoordinates.begin() + (i * m_Dimensions), m_TextureCoordinates.begin() + (i * m_Dimensions) + m_Dimensions);
+		}
+	}
+
+
+	m_VAO = std::make_unique<VertexArray>();
+	m_VertexBuffer = std::make_unique<VertexBuffer>(&m_Vertices[0],
+		numVertices * (m_Dimensions + 3 * insertNormalsFlag + 2 * insertTextureCoordsFlag) * sizeof(float));
+	m_IndexBuffer = std::make_unique<IndexBuffer>(&m_PositionIndices[0], m_PositionIndices.size());
+
+	VertexBufferLayout layout;
+	layout.Push<float>(m_Dimensions);
+	if (insertNormalsFlag)
+		layout.Push<float>(3);
+	if (insertTextureCoordsFlag)
+		layout.Push<float>(2);
+	m_VAO->AddBuffer(*m_VertexBuffer, layout);
+}
 
 
 

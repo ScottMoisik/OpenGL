@@ -10,6 +10,7 @@ struct VertexBufferElement {
 
 	static unsigned int GetSizeOfType(unsigned int type) {
 		switch (type) {
+			case GL_MATRIX4_NV:			return 4*4*4; //Size of float * 4 elements per vector * 4 vectors for a 4x4 matrix
 			case GL_FLOAT:				return 4;
 			case GL_UNSIGNED_INT:		return 4;
 			case GL_UNSIGNED_BYTE:		return 1;
@@ -48,6 +49,12 @@ public:
 	void Push<unsigned char>(unsigned int count) {
 		m_Elements.push_back({ GL_UNSIGNED_BYTE, count, GL_TRUE });
 		m_Stride += count * VertexBufferElement::GetSizeOfType(GL_UNSIGNED_BYTE);
+	}
+
+	template<>
+	void Push<glm::mat4>(unsigned int count) {
+		m_Elements.push_back({ GL_MATRIX4_NV, count, GL_TRUE });
+		m_Stride += count * VertexBufferElement::GetSizeOfType(GL_MATRIX4_NV);
 	}
 
 	inline const std::vector<VertexBufferElement> GetElements() const { return m_Elements; }

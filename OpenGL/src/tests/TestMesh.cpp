@@ -36,18 +36,23 @@ namespace Test {
 		/* Setup for lighting */
 		m_Shader->SetUniform3f("u_LightColor", 0.8f, 0.8f, 0.8f);
 
-		/* Load normal visualizing shader */
-		m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualization.shader");
-		m_NormalVisualizingShader->Bind();
-
+		
 		/* TEST AREA */
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::EIGHTHS);
 
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SIXTEENTHS);
-		m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::res256);
+		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::res256, 2);
 
+		m_Mesh = std::make_unique<Mesh>("res/meshes/earth.obj");
+		m_Texture = std::make_unique<Texture>("res/textures/earth.jpg");
+		m_Shader->SetUniform1i("u_Texture", 0);
 
 		//m_Mesh = std::make_unique<Mesh>("res/meshes/suzanne.obj");
+
+		/* Load normal visualizing shader */
+		m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualization.shader");
+		m_NormalVisualizingShader->Bind();
+
 	}
 
 
@@ -68,6 +73,9 @@ namespace Test {
 			m_Proj = glm::perspective(glm::radians(m_Camera->Zoom), m_Camera->m_AspectRatio, 0.1f, 100.0f);
 			m_View = m_Camera->GetViewMatrix();
 
+			/* Setup textures for the mesh */
+			m_Texture->Bind();
+
 			/* Set uniforms for the basic shader */
 			mat4 model = translate(mat4(1.0f), m_Translation);
 			model = rotate(model, radians(m_Rotation), vec3(0.0f, 1.0f, 0.0f));
@@ -76,7 +84,7 @@ namespace Test {
 			m_Shader->SetUniformMat4f("u_Model", model);
 			m_Shader->SetUniformMat4f("u_MVP", MVP);
 			m_Shader->SetUniform3f("u_LightPosition", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
-
+	
 			/* Do draw call for mesh shader*/
 			m_Mesh->Draw(*m_Shader);
 

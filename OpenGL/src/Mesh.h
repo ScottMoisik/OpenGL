@@ -3,6 +3,7 @@
 
 #include "Renderer.h"
 #include "Shader.h"
+#include "Texture.h"
 
 #include "glm/glm.hpp"
 
@@ -25,16 +26,17 @@ public:
 	std::string m_MaterialFilepath;
 
 	/*  Functions  */
-	Mesh() {}
-	Mesh(const std::string& filepath);
+	Mesh(unsigned int numInstances) : m_NumInstances(numInstances) {}
+	Mesh(const std::string& filepath, unsigned int numInstances = 1);
 	~Mesh();
+
 	void Draw(const Shader& shader);
 
 	/* Factory functions */
 	
 	enum SphereDivisions { res18 = 8, res16 = 16, res32 = 32, res64 = 64, res128 = 128, res256 = 256 };
-	static Mesh* Sphere(SphereDivisions sphereDivisions) {
-		Mesh* sphere = new Mesh();
+	static Mesh* Sphere(SphereDivisions sphereDivisions, unsigned int numInstances) {
+		Mesh* sphere = new Mesh(numInstances);
 		const float PI = 3.14159265358979323846f  /* pi */;
 		float sd = (float)sphereDivisions;
 		int numRings = (sd / 2) - 1; //Includes equator, excludes top and bottom points
@@ -128,7 +130,11 @@ private:
 	std::vector<unsigned int> m_Indices;
 	std::vector<MeshTexture> m_Textures;
 
+	/* Texture data */
+	std::unique_ptr<Texture> m_Texture;
+
 	/*  Render data  */
+	unsigned int m_NumInstances;
 	std::unique_ptr<VertexArray> m_VAO;
 	std::unique_ptr<VertexBuffer> m_VertexBuffer;
 	std::unique_ptr<IndexBuffer> m_IndexBuffer;

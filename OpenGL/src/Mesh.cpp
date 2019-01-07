@@ -9,7 +9,8 @@
 
 #include "VertexBufferLayout.h"
 
-Mesh::Mesh(const std::string& filepath) : m_Filepath(filepath) {
+
+Mesh::Mesh(const std::string& filepath, unsigned int numInstances) : m_Filepath(filepath), m_NumInstances(numInstances) {
 	ParseMeshFile(filepath);
 	SetupMesh();	
 }
@@ -24,8 +25,7 @@ void Mesh::Draw(const Shader& shader) {
 	/*
 	unsigned int diffuseNr = 1;
 	unsigned int specularNr = 1;
-	for (unsigned int i = 0; i < textures.size(); i++)
-	{
+	for (unsigned int i = 0; i < textures.size(); i++) {
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
 		// retrieve texture number (the N in diffuse_textureN)
 		string number;
@@ -39,7 +39,7 @@ void Mesh::Draw(const Shader& shader) {
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
 	glActiveTexture(GL_TEXTURE0);
-*/
+	*/
 
 	// draw mesh
 	Renderer renderer;
@@ -51,7 +51,7 @@ void Mesh::Draw(const Shader& shader) {
 
 
 
-enum AttributeType { NONE, POSITION, VERTEX_NORMAL, FACE };
+enum AttributeType { NONE, POSITION, VERTEX_NORMAL, TEXTURE_UV_COORD, FACE };
 
 class VertexAttribute {
 public:
@@ -60,6 +60,8 @@ public:
 			at = POSITION; //Positions are given as "v" in Wavefront .OBJ 
 		} else if (type.find("vn") != std::string::npos) {
 			at = VERTEX_NORMAL;
+		} else if (type.find("vt") != std::string::npos) {
+			at = TEXTURE_UV_COORD;
 		} else if (type.find("f") != std::string::npos) {
 			at = FACE;
 		}
@@ -75,6 +77,7 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 	auto start = std::chrono::high_resolution_clock::now();
 	std::ifstream stream(filepath);
 
+	
 	//if (!stream) {
 		/* Set dimensions to zero so that the check for dimensionality will occur */
 		m_Dimensions = 0;
@@ -100,6 +103,8 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 							m_Positions.push_back(std::stof(token));
 						} else if (at.IsType(AttributeType::VERTEX_NORMAL)) {
 							m_Normals.push_back(std::stof(token));
+						} else if (at.IsType(AttributeType::TEXTURE_UV_COORD)) {
+							m_TextureCoordinates.push_back(std::stof(token));
 						} else if (at.IsType(AttributeType::FACE)) {
 							int firstSlash = token.find("/");
 							int secondSlash = token.find("/", firstSlash + 1);
@@ -108,13 +113,13 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 							if (secondSlash - firstSlash != 1) {
 								std::string textureIndex = token.substr(firstSlash + 1, secondSlash - firstSlash);
 								m_TextureIndices.push_back(std::stoi(textureIndex) - 1);
-							} else {
-								std::string vertexIndex = token.substr(0, firstSlash + 1);
-								m_PositionIndices.push_back(std::stoi(vertexIndex) - 1);
-
-								std::string normalIndex = token.substr(secondSlash + 1);
-								m_NormalIndices.push_back(std::stoi(normalIndex) - 1);
 							}
+							std::string vertexIndex = token.substr(0, firstSlash + 1);
+							m_PositionIndices.push_back(std::stoi(vertexIndex) - 1);
+
+							std::string normalIndex = token.substr(secondSlash + 1);
+							m_NormalIndices.push_back(std::stoi(normalIndex) - 1);
+
 						}
 					}
 					catch (...) {
@@ -139,6 +144,20 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 			}
 		}
 		
+		/* If there are UV coordinates, attempt to load an associated texture bearing the same file name */
+		if (m_TextureIndices.size() > 0) {
+			//std::string texturePath = filepath;
+			//texturePath.replace(texturePath.size() - 3, 3, "jpg");
+			//m_Texture = std::make_unique<Texture>(texturePath);
+			//m_Shader->SetUniform1i("u_Texture", 0);
+
+			/* Map position and normal indices based on the face data */
+			for (int i = 0; i < m_PositionIndices.size(); i++) {
+				if (m_VertexIndexMap_PositionTexture.find(m_PositionIndices[i]) == m_VertexIndexMap_PositionTexture.end()) {
+					m_VertexIndexMap_PositionTexture[m_PositionIndices[i]] = m_TextureIndices[i];
+				}
+			}
+		}
 
 		auto end = std::chrono::high_resolution_clock::now();
 
@@ -155,7 +174,6 @@ void Mesh::SetupMesh() {
 	int numVertices = m_VertexIndexMap_PositionNormal.size();
 	m_Vertices.reserve(m_Positions.size() + m_Normals.size() + m_TextureCoordinates.size());
 
-	//std::vector<float>::iterator posIter;
 	bool insertNormalsFlag = m_Normals.size() > 0;
 	bool insertTextureCoordsFlag = m_TextureCoordinates.size() > 0;
 	for (int i = 0; i < numVertices; i++) {
@@ -171,22 +189,25 @@ void Mesh::SetupMesh() {
 		}
 
 		if (insertTextureCoordsFlag) {
-			m_Vertices.insert(m_Vertices.end(), m_TextureCoordinates.begin() + (i * m_Dimensions), m_TextureCoordinates.begin() + (i * m_Dimensions) + m_Dimensions);
+			m_Vertices.insert(m_Vertices.end(), m_TextureCoordinates.begin() + (i * 2), m_TextureCoordinates.begin() + (i * 2) + 2);
 		}
 	}
 
-
 	m_VAO = std::make_unique<VertexArray>();
-	m_VertexBuffer = std::make_unique<VertexBuffer>(&m_Vertices[0],
-		numVertices * (m_Dimensions + 3 * insertNormalsFlag + 2 * insertTextureCoordsFlag) * sizeof(float));
+	m_VertexBuffer = std::make_unique<VertexBuffer>(&m_Vertices[0], numVertices * (m_Dimensions + 3 * insertNormalsFlag + 2 * insertTextureCoordsFlag) * sizeof(float));
 	m_IndexBuffer = std::make_unique<IndexBuffer>(&m_PositionIndices[0], m_PositionIndices.size());
 
+	/* Specify the layout of the data in each vertex (position, normal, uv-coords*/
 	VertexBufferLayout layout;
 	layout.Push<float>(m_Dimensions);
 	if (insertNormalsFlag)
 		layout.Push<float>(3);
 	if (insertTextureCoordsFlag)
 		layout.Push<float>(2);
+	
+	/* Using instanced rendering, so we allocate storage to add an instance matrix to the vertex buffer layout */
+	//layout.Push<glm::mat4>(m_NumInstances);
+	
 	m_VAO->AddBuffer(*m_VertexBuffer, layout);
 }
 

@@ -53,8 +53,8 @@ public:
 
 	template<>
 	void Push<glm::mat4>(unsigned int count) {
-		m_Elements.push_back({ GL_MATRIX4_NV, count, GL_TRUE });
-		m_Stride += count * VertexBufferElement::GetSizeOfType(GL_MATRIX4_NV);
+		m_Elements.push_back({ GL_MATRIX4_NV, 4*count, GL_FALSE });
+		m_Stride += 64;
 	}
 
 	inline const std::vector<VertexBufferElement> GetElements() const { return m_Elements; }

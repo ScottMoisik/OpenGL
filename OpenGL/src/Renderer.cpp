@@ -22,13 +22,19 @@ Renderer::Renderer() {
 Renderer::~Renderer() {
 }
 
-void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const {
+void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader, const unsigned int numInstances) const {
 	shader.Bind();
 	va.Bind();
 	ib.Bind();
 
-	GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
+	if (numInstances < 2) {
+		GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
+	} 
+	else {
+		GLCall(glDrawElementsInstanced(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, 0, numInstances));
+	}
 }
+
 
 void Renderer::Clear() {
 	GLCall(glClear(GL_COLOR_BUFFER_BIT));

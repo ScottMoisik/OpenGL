@@ -130,11 +130,15 @@ private:
 	std::vector<unsigned int> m_Indices;
 	std::vector<MeshTexture> m_Textures;
 
+	/* Instance data */
+	unsigned int m_NumInstances, m_InstanceVertexBufferID;
+	std::vector<glm::mat4> m_InstanceMVPMatrices;
+	std::vector<glm::mat4> m_InstanceModelMatrices;
+	
 	/* Texture data */
 	std::unique_ptr<Texture> m_Texture;
 
 	/*  Render data  */
-	unsigned int m_NumInstances;
 	std::unique_ptr<VertexArray> m_VAO;
 	std::unique_ptr<VertexBuffer> m_VertexBuffer;
 	std::unique_ptr<IndexBuffer> m_IndexBuffer;

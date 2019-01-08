@@ -4,22 +4,27 @@
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
+layout(location = 3) in mat4 inst_modelMatrix;
 
 //layout(location = 2) in mat4 i_Model; //Instance model matrix 
 
 uniform mat4 u_Model;
-uniform mat4 u_MVP;
+uniform mat4 u_View;
+uniform mat4 u_Proj;
+//uniform mat4 u_MVP;
 
 out vec2 v_TexCoord;
 out vec3 fragmentNormal;
 out vec3 fragmentWorldPosition;
+//flat out int InstanceID;
 
 void main() {
 	vec4 posHomo = vec4(position, 1.0);
 	fragmentNormal = mat3(transpose(inverse(u_Model)))*normal;
 	fragmentWorldPosition = vec3(u_Model * posHomo);
-	gl_Position = u_MVP * posHomo;
+	gl_Position = u_Proj * u_View * u_Model * posHomo;
 	v_TexCoord = texCoord;
+	//InstanceID = gl_InstanceID;
 };
 
 

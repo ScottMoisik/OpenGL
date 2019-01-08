@@ -43,8 +43,8 @@ namespace Test {
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SIXTEENTHS);
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::res256, 2);
 
-		
-		m_Mesh = std::make_unique<Mesh>("res/meshes/earth.obj");
+		int numInstances = 5;
+		m_Mesh = std::make_unique<Mesh>("res/meshes/earth.obj", numInstances);
 		m_Texture = std::make_unique<Texture>("res/textures/earth.jpg");
 		m_Shader->SetUniform1i("u_Texture", 0);
 		
@@ -80,7 +80,9 @@ namespace Test {
 			mat4 MVP = m_Proj * m_View * model; //GLM is column-major memory layout so requires reverse multiplication for MVP
 			m_Shader->Bind();
 			m_Shader->SetUniformMat4f("u_Model", model);
-			m_Shader->SetUniformMat4f("u_MVP", MVP);
+			m_Shader->SetUniformMat4f("u_View", m_View);
+			m_Shader->SetUniformMat4f("u_Proj", m_Proj);
+			//m_Shader->SetUniformMat4f("u_MVP", MVP);
 			m_Shader->SetUniform3f("u_LightPosition", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
 	
 			/* Setup textures for the mesh */

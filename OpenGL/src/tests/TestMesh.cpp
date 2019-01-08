@@ -43,11 +43,12 @@ namespace Test {
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SIXTEENTHS);
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::res256, 2);
 
+		/*
 		m_Mesh = std::make_unique<Mesh>("res/meshes/earth.obj");
 		m_Texture = std::make_unique<Texture>("res/textures/earth.jpg");
 		m_Shader->SetUniform1i("u_Texture", 0);
-
-		//m_Mesh = std::make_unique<Mesh>("res/meshes/suzanne.obj");
+		*/
+		m_Mesh = std::make_unique<Mesh>("res/meshes/suzanne.obj");
 
 		/* Load normal visualizing shader */
 		m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualization.shader");

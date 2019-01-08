@@ -95,9 +95,10 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 				std::istringstream tokenStream(line);
 				std::getline(tokenStream, token, ' ');
 				VertexAttribute at = VertexAttribute(token);
+				int vertexCount = 1; //Used to check if we have a triangle or a quad (and hence need to add an additional vertex to convert to two triangles)
 
 				while (std::getline(tokenStream, token, ' ')) {
-					//std::cout << " " << token << " ";
+					
 					try {
 						if (at.IsType(AttributeType::POSITION)) {
 							m_Positions.push_back(std::stof(token));
@@ -106,20 +107,38 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 						} else if (at.IsType(AttributeType::TEXTURE_UV_COORD)) {
 							m_TextureCoordinates.push_back(std::stof(token));
 						} else if (at.IsType(AttributeType::FACE)) {
+							/* Check if this is the 4th vertex, and, if so, copy the first and third previous indices to complete the triangle */
+							if (vertexCount > 3) {
+								/* TO convert a quad to two triangles, we first need to copy the previous indices */
+								m_PositionIndices.push_back(m_PositionIndices.back());
+								m_NormalIndices.push_back(m_NormalIndices.back());
+								if (m_TextureIndices.size() > 0) { m_TextureIndices.push_back(m_TextureIndices.back()); }
+							}
+
 							int firstSlash = token.find("/");
 							int secondSlash = token.find("/", firstSlash + 1);
 
 							/* Store indices, subtracting 1 because Wavefront .OBJ indices start at 1*/
-							if (secondSlash - firstSlash != 1) {
-								std::string textureIndex = token.substr(firstSlash + 1, secondSlash - firstSlash);
-								m_TextureIndices.push_back(std::stoi(textureIndex) - 1);
-							}
-							std::string vertexIndex = token.substr(0, firstSlash + 1);
+							std::string vertexIndex = token.substr(0, firstSlash);
 							m_PositionIndices.push_back(std::stoi(vertexIndex) - 1);
 
 							std::string normalIndex = token.substr(secondSlash + 1);
 							m_NormalIndices.push_back(std::stoi(normalIndex) - 1);
+														
+							if (secondSlash - firstSlash != 1) {
+								std::string textureIndex = token.substr(firstSlash + 1, firstSlash + (secondSlash - firstSlash) - 1);
+								m_TextureIndices.push_back(std::stoi(textureIndex) - 1);
+							}
 
+							/* Check if this is the 4th vertex, and, if so, copy the first and third previous indices to complete the triangle */
+							if (vertexCount > 3) {
+								/* To convert a quad to two triangles, we then need to copy the first indices that we found in this line */
+								m_PositionIndices.push_back(m_PositionIndices[m_PositionIndices.size() - 5]);
+								m_NormalIndices.push_back(m_NormalIndices[m_NormalIndices.size() - 5]);
+								if (m_TextureIndices.size() > 0) { m_TextureIndices.push_back(m_TextureIndices[m_TextureIndices.size() - 5]); }
+							}
+
+							vertexCount++;
 						}
 					}
 					catch (...) {
@@ -189,7 +208,9 @@ void Mesh::SetupMesh() {
 		}
 
 		if (insertTextureCoordsFlag) {
-			m_Vertices.insert(m_Vertices.end(), m_TextureCoordinates.begin() + (i * 2), m_TextureCoordinates.begin() + (i * 2) + 2);
+			int j = m_VertexIndexMap_PositionTexture[i];
+			m_Vertices.push_back(m_TextureCoordinates[j * 2]);
+			m_Vertices.push_back(m_TextureCoordinates[j * 2 + 1]);
 		}
 	}
 

@@ -7,6 +7,21 @@
 
 #include "glm/glm.hpp"
 
+#define INDEX_BUFFER 0 
+#define POS_VB 1
+#define NORMAL_VB 2
+#define TEXCOORD_VB 3 
+#define WVP_MAT_VB 4
+#define WORLD_MAT_VB 5
+
+#define POSITION_LOCATION 0
+#define NORMAL_LOCATION 1
+#define TEXTURE_LOCATION 2
+#define WVP_LOCATION 3
+#define WORLD_LOCATION 4
+
+
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof(*x))
 
 class Mesh {
 public:
@@ -115,7 +130,7 @@ private:
 	std::vector<unsigned int> m_TextureIndices;
 	std::vector<unsigned int> m_NormalIndices;
 
-	std::vector<unsigned int> m_Indices;
+	std::vector<unsigned int> m_VertexIndices;
 
 	/* Instance data */
 	unsigned int m_NumInstances;
@@ -133,10 +148,13 @@ private:
 	std::unique_ptr<IndexBuffer> m_IndexBuffer;
 	//std::unique_ptr<Shader> m_Shader;
 
-	
+	/* Vertex buffer data */
+	unsigned int m_Buffers[6]; //indices, positions, normals, texture coords
+	unsigned int m_NumBuffers = 6; //Size of m_Buffers
 
 	/*  Functions */
 	void ParseMeshFile(const std::string& filepath);
 	void SetupMesh();
+	void SetupMesh2();
 };
 

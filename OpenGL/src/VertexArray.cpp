@@ -24,16 +24,15 @@ void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& la
 			offset += element.count * VertexBufferElement::GetSizeOfType(element.type);
 		} else {
 			/* Instance mode: Filling a matrix into the vertex buffer requires providing four vec 4s, one four each column */
+			unsigned int instanceOffset = 0;
+
 			for (unsigned int j = 0; j < 4; j++) {
 				glEnableVertexAttribArray(i + j);
-				glVertexAttribPointer(i + j, element.count, GL_FLOAT, element.normalized, layout.GetStride(), (const void*)offset);
+				glVertexAttribPointer(i + j, element.count, GL_FLOAT, element.normalized, sizeof(glm::mat4), (const void*)instanceOffset);
 				glVertexAttribDivisor(i + j, 1); // Specify that this part of the buffer is accessed only for each complete instance (vs. every single vertex, = 0) 
-				offset += (4 * sizeof(float));
+				instanceOffset += sizeof(glm::vec4);
 			}
-			
 		}
-
-		
 	}
 }
 

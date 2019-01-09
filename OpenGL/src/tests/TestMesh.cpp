@@ -14,8 +14,7 @@ namespace Test {
 		m_Proj(glm::perspective(glm::radians(45.0f), 3.0f/4.0f, 0.1f, 100.0f)),
 		m_View(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -10.0f))),
 		m_Translation(0.0f, 0.0f, 0.0f), m_LightPosition(0.0f, 10.0f, 10.0f) {
-		
-		
+				
 		GLint m_viewport[4];
 		GLCall(glGetIntegerv(GL_VIEWPORT, m_viewport));
 		m_ViewPortWidth = (float)m_viewport[2];
@@ -27,21 +26,17 @@ namespace Test {
 		
 		/* Enable depth testing */
 		GLCall(glEnable(GL_DEPTH_TEST));
-
-		
 		
 		/* TEST AREA */
-		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::EIGHTHS);
-
-		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SIXTEENTHS);
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::res256, 2);
+		//m_Mesh = std::make_unique<Mesh>("res/meshes/suzanne.obj");
 
-		int numInstances = 2;
+		int numInstances = 20;
 		std::string shaderFilepath = "res/shaders/BasicMesh.shader";
 		if (numInstances > 1) {
 			shaderFilepath = "res/shaders/BasicMeshInstanced.shader";
 		}
-
+		
 		/* Load primary shader for the scene */
 		m_Shader = std::make_unique<Shader>(shaderFilepath);
 		m_Shader->Bind();
@@ -58,7 +53,6 @@ namespace Test {
 		} else {
 			m_Shader->SetUniform1b("u_UseTexturing", false);
 		}
-		//m_Mesh = std::make_unique<Mesh>("res/meshes/suzanne.obj");
 
 		/* Load normal visualizing shader */
 		m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualization.shader");
@@ -73,9 +67,6 @@ namespace Test {
 		GLCall(glClearColor(0.2f, 0.2f, 0.6f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 		
-		Renderer renderer;
-
-		//m_Texture->Bind();
 		m_Proj = glm::perspective(glm::radians(45.0f), m_AspectRatio, 0.1f, 100.0f);
 		{
 			using namespace glm;
@@ -83,13 +74,25 @@ namespace Test {
 			/* Camera processing */
 			m_Proj = glm::perspective(glm::radians(m_Camera->Zoom), m_Camera->m_AspectRatio, 0.1f, 100.0f);
 			m_View = m_Camera->GetViewMatrix();
-						
+
 			/* Set uniforms for the basic shader */
 			mat4 model = translate(mat4(1.0f), m_Translation);
 			model = rotate(model, radians(m_Rotation), vec3(0.0f, 1.0f, 0.0f));
 			mat4 MVP = m_Proj * m_View * model; //GLM is column-major memory layout so requires reverse multiplication for MVP
+			m_Shader->Bind();
+			m_Shader->SetUniformMat4f("u_Proj", m_Proj);
+			m_Shader->SetUniformMat4f("u_View", m_View);
+			m_Shader->SetUniformMat4f("u_Model", model);
 			
-
+			m_Shader->SetUniform3f("u_LightPosition", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
+			
+			/* Setup textures for the mesh */
+			if (m_Texture != nullptr) {
+				m_Texture->Bind();
+				m_Shader->SetUniform1b("u_UseTexturing", true);
+			} else {
+				m_Shader->SetUniform1b("u_UseTexturing", false);
+			}
 
 			/* Do draw call for mesh shader*/
 			m_Mesh->Draw(*m_Shader);

@@ -28,14 +28,7 @@ namespace Test {
 		/* Enable depth testing */
 		GLCall(glEnable(GL_DEPTH_TEST));
 
-		/* Load primary shader for the scene */
-		m_Shader = std::make_unique<Shader>("res/shaders/BasicMesh.shader");
-		m_Shader->Bind();
-		m_Shader->SetUniform4f("u_ObjectColor", 0.8f, 0.3f, 0.8f, 1.0f);
-
-		/* Setup for lighting */
-		m_Shader->SetUniform3f("u_LightColor", 0.8f, 0.8f, 0.8f);
-
+		
 		
 		/* TEST AREA */
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::EIGHTHS);
@@ -43,11 +36,28 @@ namespace Test {
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SIXTEENTHS);
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::res256, 2);
 
-		int numInstances = 5;
-		m_Mesh = std::make_unique<Mesh>("res/meshes/earth.obj", numInstances);
+		int numInstances = 2;
+		std::string shaderFilepath = "res/shaders/BasicMesh.shader";
+		if (numInstances > 1) {
+			shaderFilepath = "res/shaders/BasicMeshInstanced.shader";
+		}
+
+		/* Load primary shader for the scene */
+		m_Shader = std::make_unique<Shader>(shaderFilepath);
+		m_Shader->Bind();
+		m_Shader->SetUniform4f("u_ObjectColor", 0.8f, 0.3f, 0.8f, 1.0f);
+
+		/* Setup for lighting */
+		m_Shader->SetUniform3f("u_LightColor", 0.8f, 0.8f, 0.8f);
+
+ 		m_Mesh = std::make_unique<Mesh>("res/meshes/earth.obj", numInstances);
 		m_Texture = std::make_unique<Texture>("res/textures/earth.jpg");
 		m_Shader->SetUniform1i("u_Texture", 0);
-		
+		if (m_Texture != nullptr) {
+			m_Shader->SetUniform1b("u_UseTexturing", true);
+		} else {
+			m_Shader->SetUniform1b("u_UseTexturing", false);
+		}
 		//m_Mesh = std::make_unique<Mesh>("res/meshes/suzanne.obj");
 
 		/* Load normal visualizing shader */
@@ -78,20 +88,7 @@ namespace Test {
 			mat4 model = translate(mat4(1.0f), m_Translation);
 			model = rotate(model, radians(m_Rotation), vec3(0.0f, 1.0f, 0.0f));
 			mat4 MVP = m_Proj * m_View * model; //GLM is column-major memory layout so requires reverse multiplication for MVP
-			m_Shader->Bind();
-			m_Shader->SetUniformMat4f("u_Model", model);
-			m_Shader->SetUniformMat4f("u_View", m_View);
-			m_Shader->SetUniformMat4f("u_Proj", m_Proj);
-			//m_Shader->SetUniformMat4f("u_MVP", MVP);
-			m_Shader->SetUniform3f("u_LightPosition", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
-	
-			/* Setup textures for the mesh */
-			if (m_Texture != nullptr) {
-				m_Texture->Bind();
-				m_Shader->SetUniform1b("u_UseTexturing", true);
-			}  else {
-				m_Shader->SetUniform1b("u_UseTexturing", false);
-			}
+			
 
 
 			/* Do draw call for mesh shader*/

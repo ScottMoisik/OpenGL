@@ -7,18 +7,6 @@
 
 #include "glm/glm.hpp"
 
-struct MeshVertex {
-	glm::vec3 Position;
-	glm::vec3 Normal;
-	glm::vec2 TexCoords;
-};
-
-struct MeshTexture {
-	unsigned int id;
-	std::string type;
-};
-
-
 
 class Mesh {
 public:
@@ -128,10 +116,11 @@ private:
 	std::vector<unsigned int> m_NormalIndices;
 
 	std::vector<unsigned int> m_Indices;
-	std::vector<MeshTexture> m_Textures;
 
 	/* Instance data */
-	unsigned int m_NumInstances, m_InstanceVertexBufferID;
+	unsigned int m_NumInstances;
+	std::unique_ptr<VertexArray> m_InstanceVAO;
+	std::unique_ptr<VertexBuffer> m_InstanceBuffer;
 	std::vector<glm::mat4> m_InstanceMVPMatrices;
 	std::vector<glm::mat4> m_InstanceModelMatrices;
 	

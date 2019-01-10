@@ -25,32 +25,42 @@ Mesh::~Mesh() {
 	//GLCall(glDeleteTextures(1, &m_RendererID));
 }
 
+void Mesh::Update(float deltaTime) {
+
+	/* Define instance matrices */
+	m_InstanceModelMatrices.clear();
+	m_InstanceMVPMatrices.clear();
+	float angularVel = 3.14f / 10.0f;
+	for (unsigned int i = 0; i < m_NumInstances; i++) {
+		m_InstanceModelMatrices.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(-20.0f + 2.0f*(float)i, 0.0f, 0.0f)));
+		m_InstanceMVPMatrices.push_back(glm::rotate(glm::mat4(1.0f), angularVel*((float)deltaTime), glm::vec3(0.0f, 1.0f, 0.0f)));
+
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[WORLD_MAT_VB]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * m_NumInstances, &m_InstanceModelMatrices[0], GL_DYNAMIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[WVP_MAT_VB]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * m_NumInstances, &m_InstanceMVPMatrices[0], GL_DYNAMIC_DRAW);
+
+}
+
 
 void Mesh::Draw(const Shader& shader) {
-
-	if (m_NumInstances > 1) {
-		shader.Bind();
-		m_VAO->Bind();
-		/*
-		
-		m_IndexBuffer->Bind();
-
-		GLCall(glDrawElementsInstanced(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, 0, m_NumInstances));
-		*/
-	} else {
-		Renderer renderer;
-		renderer.Draw(*m_VAO, *m_IndexBuffer, shader);
-	}
+	shader.Bind();
+	m_VAO->Bind();
+	glDrawElementsInstanced(GL_TRIANGLES, m_VertexIndices.size(), GL_UNSIGNED_INT, 0, m_NumInstances);
 }
 
 /* Uses the structure of arrays approach (one array for each attribute type) */
 void Mesh::SetupMesh2() {
 	/* Setup vertex array object */
 	m_VAO = std::make_unique<VertexArray>();
+	m_VAO->Bind();
 
 	/* Create the buffers for the vertex atttributes */
 	glGenBuffers(ARRAY_SIZE(m_Buffers), m_Buffers);
-
+	
 	/* Reserve space in the vectors for the vertex attributes and indices */
 	// Generate and populate the buffers with vertex attributes and the indices
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POS_VB]);
@@ -58,41 +68,42 @@ void Mesh::SetupMesh2() {
 	glEnableVertexAttribArray(POSITION_LOCATION);
 	glVertexAttribPointer(POSITION_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VB]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_TextureCoordinates[0]) * m_TextureCoordinates.size(), &m_TextureCoordinates[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(TEXTURE_LOCATION);
-	glVertexAttribPointer(TEXTURE_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
-
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[NORMAL_VB]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(m_Normals[0]) * m_Normals.size(), &m_Normals[0], GL_STATIC_DRAW);
 	glEnableVertexAttribArray(NORMAL_LOCATION);
 	glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
+	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VB]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(m_TextureCoordinates[0]) * m_TextureCoordinates.size(), &m_TextureCoordinates[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(TEXTURE_LOCATION);
+	glVertexAttribPointer(TEXTURE_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[INDEX_BUFFER]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_VertexIndices[0]) * m_VertexIndices.size(), &m_VertexIndices[0], GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[WVP_MAT_VB]);
-	for (unsigned int i = 0; i < 4; i++) {
-		glEnableVertexAttribArray(WVP_LOCATION + i);
-		glVertexAttribPointer(WVP_LOCATION + i, 4, GL_FLOAT, GL_FALSE, sizeof(Matrix4f),
-			(const GLvoid*)(sizeof(GLfloat) * i * 4));
-		glVertexAttribDivisor(WVP_LOCATION + i, 1);
-	}
-
+	/* Bind the array buffer used for feeding instance matrices to the mesh shader */
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[WORLD_MAT_VB]);
-		for (unsigned int i = 0; i < 4; i++) {
-		glEnableVertexAttribArray(WORLD_LOCATION + i);
-		glVertexAttribPointer(WORLD_LOCATION + i, 4, GL_FLOAT, GL_FALSE, sizeof(Matrix4f),
-			(const GLvoid*)(sizeof(GLfloat) * i * 4));
-		glVertexAttribDivisor(WORLD_LOCATION + i, 1);
-	}
-	glVertexAttribDivisor(3, 1);
-	glVertexAttribDivisor(4, 1);
-	glVertexAttribDivisor(5, 1);
-	glVertexAttribDivisor(6, 1);
 
-	glBindVertexArray(0);
-	/* Make sure the VAO is not changed from outside code */
+	/* Set the vertex attributes for the instanced matrices */
+	GLsizei vec4Size = sizeof(glm::vec4);
+	for (int i = 0; i < 4; i++) {
+		int attributePosition = WORLD_LOCATION + i;
+		glEnableVertexAttribArray(attributePosition);
+		glVertexAttribPointer(attributePosition, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(i * vec4Size));
+		glVertexAttribDivisor(attributePosition, 1);
+	}
+
+	/* Bind the array buffer used for feeding instance matrices to the mesh shader */
+	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[WVP_MAT_VB]);
+
+	/* Set the vertex attributes for the instanced matrices */
+	for (int i = 0; i < 4; i++) {
+		int attributePosition = MVP_LOCATION + i;
+		glEnableVertexAttribArray(attributePosition);
+		glVertexAttribPointer(attributePosition, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(i * vec4Size));
+		glVertexAttribDivisor(attributePosition, 1);
+	}
+	
 	m_VAO->Unbind();
 }
 
@@ -267,17 +278,15 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 		}
 	}
 
+	
 	/* Map position and normal indices based on the face data */
 	for (int i = 0; i < m_VertexIndices.size(); i++) {
 		if (m_VertexIndexMap_PositionNormal.find(m_VertexIndices[i]) == m_VertexIndexMap_PositionNormal.end()) {
 			m_VertexIndexMap_PositionNormal[m_VertexIndices[i]] = m_NormalIndices[i];
 		}
-	}
 
-	/* If there are UV coordinates, attempt to load an associated texture bearing the same file name */
-	if (m_TextureIndices.size() > 0) {
-		/* Map position and normal indices based on the face data */
-		for (int i = 0; i < m_VertexIndices.size(); i++) {
+		/* If there are UV coordinates, attempt to load an associated texture bearing the same file name */
+		if (m_TextureIndices.size() > 0) {
 			if (m_VertexIndexMap_PositionTexture.find(m_VertexIndices[i]) == m_VertexIndexMap_PositionTexture.end()) {
 				m_VertexIndexMap_PositionTexture[m_VertexIndices[i]] = m_TextureIndices[i];
 			}
@@ -285,19 +294,20 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 	}
 
 
-	/* Store the normals and texture coordinates in the same order as the positions */
-	for (int i = 0; i < m_VertexIndexMap_PositionNormal.size(); i++) { 
-		int j = m_VertexIndexMap_PositionNormal[i];
-		m_Normals.push_back(normalsTemp[j]); 
+	/* Store everything in the same order */
+
+	for (int i = 0; i < m_VertexIndexMap_PositionNormal.size(); i++) {
+		int j = m_VertexIndexMap_PositionNormal[i] * 3;
+		m_Normals.push_back(normalsTemp[j]);
 		m_Normals.push_back(normalsTemp[j + 1]);
 		m_Normals.push_back(normalsTemp[j + 2]);
 	}
 	for (int i = 0; i < m_VertexIndexMap_PositionTexture.size(); i++) {
-		int j = m_VertexIndexMap_PositionNormal[i];
-		m_TextureCoordinates.push_back(texCoordTemp[j]); 
+		int j = m_VertexIndexMap_PositionTexture[i] * 2;
+		m_TextureCoordinates.push_back(texCoordTemp[j]);
 		m_TextureCoordinates.push_back(texCoordTemp[j + 1]);
 	}
-
+	
 	auto end = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<float> duration = end - start;

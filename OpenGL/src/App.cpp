@@ -32,16 +32,17 @@
 
 /* Forward declarations of camera-related input callbacks */
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_move_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 Camera camera;
 float lastX, lastY;
 float deltaTime = 0.0f;	// time between current frame and last frame
-float lastFrame = 0.0f;
+float lastTime = 0.0f;
 bool firstMouse = true;
-
+bool mouseClickFlag = false;
 
 int main(void) {
 	GLFWwindow* window;
@@ -70,7 +71,8 @@ int main(void) {
 	lastX = windowWidth / 2.0f;
 	lastY = windowHeight / 2.0f;
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetCursorPosCallback(window, mouse_move_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
@@ -112,9 +114,9 @@ int main(void) {
 
 
 		while (!glfwWindowShouldClose(window)) {
-			float currentFrame = glfwGetTime();
-			deltaTime = currentFrame - lastFrame;
-			lastFrame = currentFrame;
+			float currentTime = glfwGetTime();
+			deltaTime = currentTime - lastTime;
+			lastTime = currentTime;
 
 			GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
 			renderer.Clear();
@@ -125,7 +127,7 @@ int main(void) {
 
 			if (currentTest) {
 				currentTest->SetCamera(&camera);
-				currentTest->OnUpdate(0.0f);
+				currentTest->OnUpdate(currentTime);
 				currentTest->OnRender();
 				ImGui::Begin("Begin Test");
 
@@ -184,21 +186,33 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 
+/* glfw: whenever the mouse scroll wheel scrolls, this callback is called */
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	if (action == GLFW_PRESS && button == 2) {
+		mouseClickFlag = true;
+	} else {
+		mouseClickFlag = false;
+		firstMouse = true;
+	}
+}
+
 /* glfw: whenever the mouse moves, this callback is called */
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-	if (firstMouse) {
+void mouse_move_callback(GLFWwindow* window, double xpos, double ypos) {
+	if (mouseClickFlag) {
+		if (firstMouse) {
+			lastX = xpos;
+			lastY = ypos;
+			firstMouse = false;
+		}
+
+		float xoffset = xpos - lastX;
+		float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
 		lastX = xpos;
 		lastY = ypos;
-		firstMouse = false;
+
+		camera.ProcessMouseMovement(xoffset, yoffset);
 	}
-
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-	lastX = xpos;
-	lastY = ypos;
-
-	camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 /* glfw: whenever the mouse scroll wheel scrolls, this callback is called */

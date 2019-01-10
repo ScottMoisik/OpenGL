@@ -11,14 +11,14 @@
 #define POS_VB 1
 #define NORMAL_VB 2
 #define TEXCOORD_VB 3 
-#define WVP_MAT_VB 4
-#define WORLD_MAT_VB 5
+#define WORLD_MAT_VB 4
+#define WVP_MAT_VB 5
 
 #define POSITION_LOCATION 0
 #define NORMAL_LOCATION 1
 #define TEXTURE_LOCATION 2
-#define WVP_LOCATION 3
-#define WORLD_LOCATION 4
+#define WORLD_LOCATION 3
+#define MVP_LOCATION 7
 
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(*x))
@@ -32,11 +32,28 @@ public:
 	Mesh(unsigned int numInstances) : m_NumInstances(numInstances) {}
 	Mesh(const std::string& filepath, unsigned int numInstances = 1);
 	~Mesh();
-
+	void Update(float deltaTime);
 	void Draw(const Shader& shader);
 
 	/* Factory functions */
-	
+	static Mesh* Plane(unsigned int numInstances) {
+		Mesh* plane = new Mesh(numInstances);
+
+		plane->m_Positions.insert(plane->m_Positions.end(), {
+			-1.0,  0.0, -1.0,
+			-1.0,  0.0,  1.0,
+			 1.0,  0.0,  1.0,
+			 1.0,  0.0, -1.0 });
+
+		plane->m_Normals.insert(plane->m_Normals.end(), {
+			 0.0,  1.0,  0.0,
+			 0.0,  1.0,  0.0,
+			 0.0,  1.0,  0.0,
+			 0.0,  1.0,  0.0 });
+
+		
+	}
+
 	enum SphereDivisions { res18 = 8, res16 = 16, res32 = 32, res64 = 64, res128 = 128, res256 = 256 };
 	static Mesh* Sphere(SphereDivisions sphereDivisions, unsigned int numInstances) {
 		Mesh* sphere = new Mesh(numInstances);

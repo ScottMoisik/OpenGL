@@ -129,6 +129,9 @@ int main(void) {
 			lastTime = currentTime;
 
 			GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
+			glCullFace(GL_BACK);
+
+
 			renderer.Clear();
 
 			ImGui_ImplGlfwGL3_NewFrame();
@@ -137,6 +140,7 @@ int main(void) {
 
 			if (currentTest) {
 				currentTest->SetCamera(&camera);
+				currentTest->SetScreenSize(windowWidth, windowHeight);
 				currentTest->OnUpdate(currentTime);
 				currentTest->OnRender();
 				ImGui::Begin("Begin Test");

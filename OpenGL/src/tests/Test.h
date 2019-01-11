@@ -17,8 +17,11 @@ namespace Test {
 		virtual void OnRender() {}
 		virtual void OnImGuiRender() {}
 		void SetCamera(Camera* camera) { m_Camera = camera; }
+		void SetScreenSize(int width, int height) { m_Width = width; m_Height = height; }
+		
 	protected:
 		Camera* m_Camera;
+		int m_Width, m_Height;
 	};
 
 

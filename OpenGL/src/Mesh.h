@@ -91,9 +91,13 @@ public:
 			glm::vec3 normal = glm::vec3(x, y, z);
 			glm::vec3 shift = normal;
 			shift *= 0.5;
-
+			
+			glm::mat4 R = glm::mat4(1.0f);
 			glm::vec3 axis = glm::cross(normal, up);
-			glm::mat4 R = glm::rotate(glm::mat4(1.0f), PI / 2, axis);
+			/* Make sure that the axis is not close to zero (if normal and up are in same direction) */
+			if (glm::length(axis) > 0.1) {
+				R = glm::rotate(glm::mat4(1.0f), PI / 2, axis);
+			}
 			glm::mat4 T = glm::translate(glm::mat4(1.0f), shift);
 
 			float verts[] = { -0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, 0.5f, 0.0f, -0.5f };
@@ -106,16 +110,14 @@ public:
 		};
 
 		buildCubeLambda(-1.0f,  0.0f,  0.0f); //left
-		buildCubeLambda( 0.0f,  0.0f, -1.0f); //front
+		buildCubeLambda( 0.0f,  0.0f,  1.0f); //front
 		buildCubeLambda( 0.0f, -1.0f,  0.0f); //bottom
-		buildCubeLambda( 0.0f,  0.0f,  1.0f); //behind
+		buildCubeLambda( 0.0f,  0.0f, -1.0f); //behind
 		buildCubeLambda( 1.0f,  0.0f,  0.0f); //right
 		buildCubeLambda( 0.0f,  1.0f,  0.0f); //top
-		
-		
 
 		/* Maps the texture to a unfolded cube set within and flush against a rectangular image */
-		float coords[] = { 0.0f, 2.0f / 3.0f, 1.0f / 4.0f, 1.0f / 3.0f, 1.0f / 4.0f, 2.0f / 3.0f, 1.0f / 4.0f, 3.0f / 3.0f, 2.0f / 4.0f, 2.0f / 3.0f, 4.0f / 4.0f, 2.0f / 3.0f };
+		float coords[] = { 0.0f, 2.0f / 3.0f, 1.0f / 4.0f, 1.0f / 3.0f, 1.0f / 4.0f, 2.0f / 3.0f, 1.0f / 4.0f, 3.0f / 3.0f, 2.0f / 4.0f, 2.0f / 3.0f, 3.0f / 4.0f, 2.0f / 3.0f };
 		auto insertTextureCoordsLambda = [&cube](float left, float top) { cube->m_TextureCoordinates.insert(cube->m_TextureCoordinates.end(), { left, top, left, top - 1.0f/3.0f, left + 1.0f / 4.0f, top - 1.0f / 3.0f, left + 1.0f / 4.0f, top }); };
 		for (int i = 0; i < 6; i++) {
 			insertTextureCoordsLambda(coords[i * 2], coords[i * 2 + 1]);

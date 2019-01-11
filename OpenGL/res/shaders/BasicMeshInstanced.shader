@@ -58,7 +58,7 @@ void main() {
 		objColor = texture(u_Texture, v_TexCoord);
 	}
 		
-	float ambientStrength = 0.95;
+	float ambientStrength = 0.5;
 	vec3 ambient = ambientStrength * u_LightColor;
 	
 	vec3 norm = normalize(f_Normal);
@@ -69,7 +69,7 @@ void main() {
 	float diff = max(dot(norm, lightDir), 0.0);
 	vec3 diffuse = vec3(diff * u_LightColor);
 	
-	float specularStrength = 0.8;
+	float specularStrength = 0.5;
 	float spec = 0.0;
 	bool blinnFlag = true;
 	if (blinnFlag) {

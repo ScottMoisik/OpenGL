@@ -44,6 +44,8 @@ float lastTime = 0.0f;
 bool firstMouse = true;
 bool mouseClickFlag = false;
 
+#define BASE_DPI 72.0f
+
 int main(void) {
 	GLFWwindow* window;
 
@@ -56,7 +58,8 @@ int main(void) {
 
 	int windowWidth = 3 * GetSystemMetrics(SM_CXSCREEN) / 4;
 	int windowHeight = 3 * GetSystemMetrics(SM_CYSCREEN) / 4;
-
+	
+	
 
 
 	/* Create a windowed mode window and its OpenGL context */
@@ -65,6 +68,14 @@ int main(void) {
 		glfwTerminate();
 		return -1;
 	}
+
+	/* Get the monitor dpi */
+	int count;
+	GLFWmonitor* primary = glfwGetPrimaryMonitor();
+	int widthMM, heightMM;
+	const GLFWvidmode* mode = glfwGetVideoMode(primary);
+	glfwGetMonitorPhysicalSize(primary, &widthMM, &heightMM);
+	const double dpi = mode->width / (widthMM / 25.4);
 
 	/* Set callbacks for input to control camera */
 	camera = Camera(windowWidth, windowHeight, glm::vec3(0.0f, 0.0f, 3.0f));
@@ -97,12 +108,11 @@ int main(void) {
 		ImGui_ImplGlfwGL3_Init(window, false);
 
 		ImGui::StyleColorsDark();
-
 		ImGuiStyle& style = ImGui::GetStyle();
-		style.ScaleAllSizes(5.0f);
+		style.ScaleAllSizes(dpi/BASE_DPI);
 
 		ImGuiIO& io = ImGui::GetIO();
-		io.FontGlobalScale = 4.0;
+		io.FontGlobalScale = dpi / BASE_DPI;
 
 		Test::Test* currentTest = NULL;
 		Test::TestMenu* testMenu = new Test::TestMenu(currentTest);
@@ -130,6 +140,8 @@ int main(void) {
 				currentTest->OnUpdate(currentTime);
 				currentTest->OnRender();
 				ImGui::Begin("Begin Test");
+				ImGui::SetWindowPos(ImVec2(2.0f * windowWidth / 3.0f, 2.0f * windowHeight / 3.0f));
+				ImGui::SetWindowSize(ImVec2(windowWidth / 3.0f, windowHeight / 3.0f));
 
 				if (currentTest != testMenu && ImGui::Button("<-")) {
 					delete currentTest;

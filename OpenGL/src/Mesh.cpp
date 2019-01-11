@@ -25,18 +25,7 @@ Mesh::~Mesh() {
 	//GLCall(glDeleteTextures(1, &m_RendererID));
 }
 
-void Mesh::Update(float deltaTime) {
-
-	/* Define instance matrices */
-	m_InstanceModelMatrices.clear();
-	m_InstanceMVPMatrices.clear();
-	float angularVel = 3.14f / 10.0f;
-	for (unsigned int i = 0; i < m_NumInstances; i++) {
-		m_InstanceModelMatrices.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(-20.0f + 2.0f*(float)i, 0.0f, 0.0f)));
-		m_InstanceMVPMatrices.push_back(glm::rotate(glm::mat4(1.0f), angularVel*((float)deltaTime), glm::vec3(0.0f, 1.0f, 0.0f)));
-
-	}
-
+void Mesh::Update() {	
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[WORLD_MAT_VB]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * m_NumInstances, &m_InstanceModelMatrices[0], GL_DYNAMIC_DRAW);
 
@@ -58,7 +47,7 @@ void Mesh::SetupMesh2() {
 	m_VAO = std::make_unique<VertexArray>();
 	m_VAO->Bind();
 
-	/* Create the buffers for the vertex atttributes */
+	/* Create the array buffers for the vertex atttributes */
 	glGenBuffers(ARRAY_SIZE(m_Buffers), m_Buffers);
 	
 	/* Reserve space in the vectors for the vertex attributes and indices */
@@ -73,10 +62,13 @@ void Mesh::SetupMesh2() {
 	glEnableVertexAttribArray(NORMAL_LOCATION);
 	glVertexAttribPointer(NORMAL_LOCATION, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VB]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(m_TextureCoordinates[0]) * m_TextureCoordinates.size(), &m_TextureCoordinates[0], GL_STATIC_DRAW);
-	glEnableVertexAttribArray(TEXTURE_LOCATION);
-	glVertexAttribPointer(TEXTURE_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	/* Setup texture coordinate array buffer */
+	if (m_TextureCoordinates.size() > 0) {
+		glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[TEXCOORD_VB]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(m_TextureCoordinates[0]) * m_TextureCoordinates.size(), &m_TextureCoordinates[0], GL_STATIC_DRAW);
+		glEnableVertexAttribArray(TEXTURE_LOCATION);
+		glVertexAttribPointer(TEXTURE_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	}
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_Buffers[INDEX_BUFFER]);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(m_VertexIndices[0]) * m_VertexIndices.size(), &m_VertexIndices[0], GL_STATIC_DRAW);

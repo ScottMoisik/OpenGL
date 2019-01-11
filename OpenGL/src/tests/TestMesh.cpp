@@ -34,6 +34,14 @@ namespace Test {
 		int numInstances = 100;
 		//std::string shaderFilepath = "res/shaders/BasicMesh.shader";
 		
+		m_MeshLight = (std::unique_ptr<Mesh>)Mesh::Cube(1);
+		m_MeshLight->SetColor(0.9f, 0.9f, 1.0f, 1.0f);
+		m_PlaneTexture = std::make_unique<Texture>("res/textures/earth.jpg");
+		
+		m_MeshPlane = (std::unique_ptr<Mesh>)Mesh::Plane(1);
+		m_MeshPlane->SetColor(0.2f, 0.2f, 0.6f, 1.0f);
+		m_PlaneTexture = std::make_unique<Texture>("res/textures/marble.jpg");
+
  		m_Mesh = std::make_unique<Mesh>("res/meshes/earth.obj", numInstances);
 		m_Texture = std::make_unique<Texture>("res/textures/earth.jpg");
 
@@ -58,7 +66,30 @@ namespace Test {
 
 	TestMesh::~TestMesh() {}
 	void TestMesh::OnUpdate(float deltaTime) {
-		m_Mesh->Update(deltaTime);
+		/* Define instance matrices */
+		m_Mesh->m_InstanceModelMatrices.clear();
+		m_Mesh->m_InstanceMVPMatrices.clear();
+		float angularVel = 3.14f / 10.0f;
+		for (unsigned int i = 0; i < m_Mesh->m_NumInstances; i++) {
+			m_Mesh->m_InstanceModelMatrices.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(-20.0f + 2.0f*(float)i, 0.0f, 0.0f)));
+			m_Mesh->m_InstanceMVPMatrices.push_back(glm::rotate(glm::mat4(1.0f), angularVel*((float)deltaTime), glm::vec3(0.0f, 1.0f, 0.0f)));
+
+		}
+		m_Mesh->Update();
+
+		float scale = 100.0f;
+		m_MeshPlane->m_InstanceModelMatrices.clear();
+		m_MeshPlane->m_InstanceMVPMatrices.clear();
+		m_MeshPlane->m_InstanceModelMatrices.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -10.0f, 0.0f)));
+		m_MeshPlane->m_InstanceMVPMatrices.push_back(glm::scale(glm::mat4(1.0f), glm::vec3(scale, scale, scale)));
+		m_MeshPlane->Update();
+
+		float lightScale = 1.0f;
+		m_MeshLight->m_InstanceModelMatrices.clear();
+		m_MeshLight->m_InstanceMVPMatrices.clear();
+		m_MeshLight->m_InstanceModelMatrices.push_back(glm::translate(glm::mat4(1.0f), m_LightPosition));
+		m_MeshLight->m_InstanceMVPMatrices.push_back(glm::scale(glm::mat4(1.0f), glm::vec3(lightScale, lightScale, lightScale)));
+		m_MeshLight->Update();
 	}
 	void TestMesh::OnRender() {
 		GLCall(glClearColor(0.2f, 0.2f, 0.6f, 1.0f));
@@ -69,7 +100,7 @@ namespace Test {
 			using namespace glm;
 
 			/* Camera processing */
-			m_Proj = glm::perspective(glm::radians(m_Camera->Zoom), m_Camera->m_AspectRatio, 0.1f, 100.0f);
+			m_Proj = glm::perspective(glm::radians(m_Camera->Zoom), m_Camera->m_AspectRatio, 0.1f, 1000.0f);
 			m_View = m_Camera->GetViewMatrix();
 
 
@@ -85,6 +116,31 @@ namespace Test {
 			m_Shader->SetUniform3f("u_ViewPos", m_Camera->Position.x, m_Camera->Position.y, m_Camera->Position.z);
 			m_Shader->SetUniform3f("u_LightPosition", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
 	
+
+			/* Setup textures for the light */
+			if (m_LightTexture != nullptr) {
+				m_LightTexture->Bind();
+				m_Shader->SetUniform1b("u_UseTexturing", true);
+			}
+			else {
+				m_Shader->SetUniform1b("u_UseTexturing", false);
+			}
+
+			m_MeshLight->Draw(*m_Shader);
+			m_LightTexture->Unbind();
+
+
+			/* Setup textures for the plane */
+			if (m_PlaneTexture != nullptr) {
+				m_PlaneTexture->Bind();
+				m_Shader->SetUniform1b("u_UseTexturing", true);
+			}
+			else {
+				m_Shader->SetUniform1b("u_UseTexturing", false);
+			}
+
+			m_MeshPlane->Draw(*m_Shader);
+			m_PlaneTexture->Unbind();
 
 			/* Setup textures for the mesh */
 			if (m_Texture != nullptr) {

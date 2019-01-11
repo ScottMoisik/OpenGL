@@ -6,6 +6,7 @@
 #include "Texture.h"
 
 #include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 #define INDEX_BUFFER 0 
 #define POS_VB 1
@@ -28,31 +29,109 @@ public:
 	std::string m_Filepath;
 	std::string m_MaterialFilepath;
 
+	/* Instance data */
+	unsigned int m_NumInstances;
+	std::vector<glm::mat4> m_InstanceMVPMatrices;
+	std::vector<glm::mat4> m_InstanceModelMatrices;
+
+
 	/*  Functions  */
 	Mesh(unsigned int numInstances) : m_NumInstances(numInstances) {}
 	Mesh(const std::string& filepath, unsigned int numInstances = 1);
 	~Mesh();
-	void Update(float deltaTime);
+	void Update();
 	void Draw(const Shader& shader);
+	void SetColor(float r, float g, float b, float a) { m_Color.x = r; m_Color.y = g; m_Color.z = b; m_Color.w = a; }
 
 	/* Factory functions */
 	static Mesh* Plane(unsigned int numInstances) {
 		Mesh* plane = new Mesh(numInstances);
 
 		plane->m_Positions.insert(plane->m_Positions.end(), {
-			-1.0,  0.0, -1.0,
-			-1.0,  0.0,  1.0,
-			 1.0,  0.0,  1.0,
-			 1.0,  0.0, -1.0 });
+			-0.5f,  0.0f,  0.5f, //upper left corner
+			-0.5f,  0.0f, -0.5f, //lower left corner
+			 0.5f,  0.0f, -0.5f, //lower right corner
+			 0.5f,  0.0f,  0.5f  //upper rigth corner 
+			});
 
 		plane->m_Normals.insert(plane->m_Normals.end(), {
-			 0.0,  1.0,  0.0,
-			 0.0,  1.0,  0.0,
-			 0.0,  1.0,  0.0,
-			 0.0,  1.0,  0.0 });
+			 0.0f,  1.0f,  0.0f,
+			 0.0f,  1.0f,  0.0f,
+			 0.0f,  1.0f,  0.0f,
+			 0.0f,  1.0f,  0.0f 
+			});
 
+		plane->m_TextureCoordinates.insert(plane->m_TextureCoordinates.end(), {
+			 0.0f,  1.0f, //upper left corner
+			 0.0f,  0.0f, //lower left corner
+			 1.0f,  0.0f, //lower right corner
+			 1.0f,  1.0f  //upper right corner
+			});
+
+		plane->m_VertexIndices.insert(plane->m_VertexIndices.end(), {
+			0, 1, 2,
+			2, 3, 0
+			});
+
+		plane->SetupMesh2();
+
+		return plane;
 		
 	}
+
+
+	/* Factory functions */
+	static Mesh* Cube(unsigned int numInstances) {
+		Mesh* cube = new Mesh(numInstances);
+		const float PI = 3.14159265358979323846f  /* pi */;
+		glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+		
+		/* Use a lambda to shorten the code for inserting normals */
+		auto buildCubeLambda = [&cube, &up, &PI](float x, float y, float z) {
+			glm::vec3 normal = glm::vec3(x, y, z);
+			glm::vec3 shift = normal;
+			shift *= 0.5;
+
+			glm::vec3 axis = glm::cross(normal, up);
+			glm::mat4 R = glm::rotate(glm::mat4(1.0f), PI / 2, axis);
+			glm::mat4 T = glm::translate(glm::mat4(1.0f), shift);
+
+			float verts[] = { -0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, 0.5f, 0.0f, -0.5f };
+			for (int i = 0; i < 4; i++) {
+				glm::vec4 vert = T * R * glm::vec4(verts[i * 3], verts[i * 3 + 1], verts[i * 3 + 2], 1.0f);
+				cube->m_Positions.insert(cube->m_Positions.end(), { vert.x, vert.y, vert.z });
+			}
+
+			cube->m_Normals.insert(cube->m_Normals.end(), { x, y, z, x, y, z, x, y, z, x, y, z }); 
+		};
+
+		buildCubeLambda(-1.0f,  0.0f,  0.0f); //left
+		buildCubeLambda( 0.0f,  0.0f, -1.0f); //front
+		buildCubeLambda( 0.0f, -1.0f,  0.0f); //bottom
+		buildCubeLambda( 0.0f,  0.0f,  1.0f); //behind
+		buildCubeLambda( 1.0f,  0.0f,  0.0f); //right
+		buildCubeLambda( 0.0f,  1.0f,  0.0f); //top
+		
+		
+
+		/* Maps the texture to a unfolded cube set within and flush against a rectangular image */
+		float coords[] = { 0.0f, 2.0f / 3.0f, 1.0f / 4.0f, 1.0f / 3.0f, 1.0f / 4.0f, 2.0f / 3.0f, 1.0f / 4.0f, 3.0f / 3.0f, 2.0f / 4.0f, 2.0f / 3.0f, 4.0f / 4.0f, 2.0f / 3.0f };
+		auto insertTextureCoordsLambda = [&cube](float left, float top) { cube->m_TextureCoordinates.insert(cube->m_TextureCoordinates.end(), { left, top, left, top - 1.0f/3.0f, left + 1.0f / 4.0f, top - 1.0f / 3.0f, left + 1.0f / 4.0f, top }); };
+		for (int i = 0; i < 6; i++) {
+			insertTextureCoordsLambda(coords[i * 2], coords[i * 2 + 1]);
+		}
+
+		auto insertVertexIndicesLambda = [&cube](unsigned int i) { cube->m_VertexIndices.insert(cube->m_VertexIndices.end(), { i, i + 1, i + 2, i + 2, i + 3, i }); };
+		for (int i = 0; i < 6; i++) {
+			insertVertexIndicesLambda(4 * i);
+		}
+
+		cube->SetupMesh2();
+
+		return cube;
+
+	}
+
 
 	enum SphereDivisions { res18 = 8, res16 = 16, res32 = 32, res64 = 64, res128 = 128, res256 = 256 };
 	static Mesh* Sphere(SphereDivisions sphereDivisions, unsigned int numInstances) {
@@ -136,6 +215,7 @@ public:
 private:
 	/*  Mesh Data  */
 	unsigned int m_Dimensions = 0;
+	glm::vec4 m_Color;
 	std::vector<float> m_Positions;
 	std::vector<float> m_Normals;
 	std::vector<float> m_TextureCoordinates;
@@ -150,12 +230,9 @@ private:
 	std::vector<unsigned int> m_VertexIndices;
 
 	/* Instance data */
-	unsigned int m_NumInstances;
 	std::unique_ptr<VertexArray> m_InstanceVAO;
 	std::unique_ptr<VertexBuffer> m_InstanceBuffer;
-	std::vector<glm::mat4> m_InstanceMVPMatrices;
-	std::vector<glm::mat4> m_InstanceModelMatrices;
-	
+
 	/* Texture data */
 	std::unique_ptr<Texture> m_Texture;
 

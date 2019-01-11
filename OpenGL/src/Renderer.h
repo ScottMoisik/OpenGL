@@ -19,7 +19,7 @@ public:
 	Renderer();
 	~Renderer();
 
-	void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
+	void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader, const unsigned int numInstances = 1) const;
 
 	void Clear();
 	void SetClearColor(float r, float g, float b);

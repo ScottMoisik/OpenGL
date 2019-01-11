@@ -1,8 +1,10 @@
 #shader vertex
 #version 330 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec3 aNormal;
-//layout(location = 2) in mat4 i_Model; //Instance model matrix 
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
+//layout(location = 2) in vec2 texCoord;
+layout(location = 3) in mat4 instanceModel;
+layout(location = 7) in mat4 rotModel;
 
 out VS_OUT{
 	vec3 normal;
@@ -14,9 +16,9 @@ uniform mat4 u_Model;
 uniform mat4 u_MVP;
 
 void main() {
-	gl_Position = u_MVP * vec4(aPos, 1.0);
-	mat3 normalMatrix = mat3(transpose(inverse(u_View * u_Model)));
-	vs_out.normal = normalize(vec3(u_Proj * vec4(normalMatrix * aNormal, 0.0)));
+	gl_Position = u_Proj * u_View * instanceModel * rotModel * vec4(position, 1.0);
+	mat3 normalMatrix = mat3(transpose(inverse(instanceModel * rotModel)));
+	vs_out.normal = normalize(vec3(u_Proj * u_View * vec4(normalMatrix * normal, 0.0)));
 }
 
 #shader geometry

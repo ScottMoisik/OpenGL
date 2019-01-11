@@ -470,6 +470,8 @@
     </None>
     <None Include="res\shaders\BasicMesh.shader" />
     <None Include="res\shaders\NormalVisualization.shader" />
+    <None Include="res\shaders\BasicMeshInstanced.shader" />
+    <None Include="res\shaders\NormalVisualizationInstanced.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">

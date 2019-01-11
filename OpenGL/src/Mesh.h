@@ -3,21 +3,25 @@
 
 #include "Renderer.h"
 #include "Shader.h"
+#include "Texture.h"
 
 #include "glm/glm.hpp"
 
-struct MeshVertex {
-	glm::vec3 Position;
-	glm::vec3 Normal;
-	glm::vec2 TexCoords;
-};
+#define INDEX_BUFFER 0 
+#define POS_VB 1
+#define NORMAL_VB 2
+#define TEXCOORD_VB 3 
+#define WORLD_MAT_VB 4
+#define WVP_MAT_VB 5
 
-struct MeshTexture {
-	unsigned int id;
-	std::string type;
-};
+#define POSITION_LOCATION 0
+#define NORMAL_LOCATION 1
+#define TEXTURE_LOCATION 2
+#define WORLD_LOCATION 3
+#define MVP_LOCATION 7
 
 
+#define ARRAY_SIZE(x) (sizeof(x)/sizeof(*x))
 
 class Mesh {
 public:
@@ -25,16 +29,34 @@ public:
 	std::string m_MaterialFilepath;
 
 	/*  Functions  */
-	Mesh() {}
-	Mesh(const std::string& filepath);
+	Mesh(unsigned int numInstances) : m_NumInstances(numInstances) {}
+	Mesh(const std::string& filepath, unsigned int numInstances = 1);
 	~Mesh();
+	void Update(float deltaTime);
 	void Draw(const Shader& shader);
 
 	/* Factory functions */
-	
+	static Mesh* Plane(unsigned int numInstances) {
+		Mesh* plane = new Mesh(numInstances);
+
+		plane->m_Positions.insert(plane->m_Positions.end(), {
+			-1.0,  0.0, -1.0,
+			-1.0,  0.0,  1.0,
+			 1.0,  0.0,  1.0,
+			 1.0,  0.0, -1.0 });
+
+		plane->m_Normals.insert(plane->m_Normals.end(), {
+			 0.0,  1.0,  0.0,
+			 0.0,  1.0,  0.0,
+			 0.0,  1.0,  0.0,
+			 0.0,  1.0,  0.0 });
+
+		
+	}
+
 	enum SphereDivisions { res18 = 8, res16 = 16, res32 = 32, res64 = 64, res128 = 128, res256 = 256 };
-	static Mesh* Sphere(SphereDivisions sphereDivisions) {
-		Mesh* sphere = new Mesh();
+	static Mesh* Sphere(SphereDivisions sphereDivisions, unsigned int numInstances) {
+		Mesh* sphere = new Mesh(numInstances);
 		const float PI = 3.14159265358979323846f  /* pi */;
 		float sd = (float)sphereDivisions;
 		int numRings = (sd / 2) - 1; //Includes equator, excludes top and bottom points
@@ -125,8 +147,17 @@ private:
 	std::vector<unsigned int> m_TextureIndices;
 	std::vector<unsigned int> m_NormalIndices;
 
-	std::vector<unsigned int> m_Indices;
-	std::vector<MeshTexture> m_Textures;
+	std::vector<unsigned int> m_VertexIndices;
+
+	/* Instance data */
+	unsigned int m_NumInstances;
+	std::unique_ptr<VertexArray> m_InstanceVAO;
+	std::unique_ptr<VertexBuffer> m_InstanceBuffer;
+	std::vector<glm::mat4> m_InstanceMVPMatrices;
+	std::vector<glm::mat4> m_InstanceModelMatrices;
+	
+	/* Texture data */
+	std::unique_ptr<Texture> m_Texture;
 
 	/*  Render data  */
 	std::unique_ptr<VertexArray> m_VAO;
@@ -134,10 +165,13 @@ private:
 	std::unique_ptr<IndexBuffer> m_IndexBuffer;
 	//std::unique_ptr<Shader> m_Shader;
 
-	
+	/* Vertex buffer data */
+	unsigned int m_Buffers[6]; //indices, positions, normals, texture coords
+	unsigned int m_NumBuffers = 6; //Size of m_Buffers
 
 	/*  Functions */
 	void ParseMeshFile(const std::string& filepath);
 	void SetupMesh();
+	void SetupMesh2();
 };
 

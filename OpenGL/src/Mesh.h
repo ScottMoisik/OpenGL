@@ -62,10 +62,10 @@ public:
 			});
 
 		plane->m_TextureCoordinates.insert(plane->m_TextureCoordinates.end(), {
-			 0.0f,  1.0f, //upper left corner
-			 0.0f,  0.0f, //lower left corner
-			 1.0f,  0.0f, //lower right corner
-			 1.0f,  1.0f  //upper right corner
+			 0.0f,  1.0f, //lower left corner
+			 0.0f,  0.0f, //lower right corner
+			 1.0f,  0.0f, //upper right corner
+			 1.0f,  1.0f  //upper left corner
 			});
 
 		plane->m_VertexIndices.insert(plane->m_VertexIndices.end(), {

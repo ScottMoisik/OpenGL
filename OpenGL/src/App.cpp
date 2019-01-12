@@ -78,7 +78,7 @@ int main(void) {
 	const double dpi = mode->width / (widthMM / 25.4);
 
 	/* Set callbacks for input to control camera */
-	camera = Camera(windowWidth, windowHeight, glm::vec3(0.0f, 0.0f, 3.0f));
+	camera = Camera(windowWidth, windowHeight, glm::vec3(0.0f, 10.0f, 15.0f));
 	lastX = windowWidth / 2.0f;
 	lastY = windowHeight / 2.0f;
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);

@@ -2,14 +2,19 @@
 #version 330 core
 
 layout(location = 0) in vec4 position;
-layout(location = 1) in vec2 texCoord;
+layout(location = 2) in vec2 texCoord;
 
 out vec2 v_TexCoord;
 
 uniform mat4 u_MVP;
+/* M1-3: Additional matrices for debugging */
+uniform mat4 u_M1; 
+uniform mat4 u_M2;
+uniform mat4 u_M3;
+
 
 void main() {
-	gl_Position = u_MVP * position;
+	gl_Position = u_MVP * u_M3 * u_M2 * u_M1 * position;
 	v_TexCoord = texCoord;
 };
 

@@ -82,7 +82,7 @@ float ShadowCalculation(vec4 fragPosLightSpace) {
 	// transform to [0,1] range
 	projCoords = projCoords * 0.5 + 0.5;
 	// get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-	float closestDepth = texture(u_ShadowMap, projCoords.xy).z;
+	float closestDepth = texture(u_ShadowMap, projCoords.xy).r;
 	// get depth of current fragment from light's perspective
 	float currentDepth = projCoords.z;
 	// check whether current frag pos is in shadow
@@ -94,21 +94,21 @@ float ShadowCalculation(vec4 fragPosLightSpace) {
 void main() {
 	
 	vec4 objColor = u_ObjectColor;
-
+	/*
 	if (bool(u_UseTexturing)) {
 		objColor = texture(u_Texture, fs_in.TexCoords);
 	}
+	*/
+	// Ambient 
+	vec3 ambient = 0.65 * u_LightColor;
 	
-	/* Ambient */
-	vec3 ambient = 0.15 * u_LightColor;
-	
-	/* Diffuse */
+	// Diffuse 
 	vec3 norm = normalize(fs_in.Normal);
 	vec3 lightDir = normalize(u_LightPosition - fs_in.FragPos);
 	float diff = max(dot(norm, lightDir), 0.0);
 	vec3 diffuse = diff * u_LightColor;
 	
-	/* Specular */
+	// Specular 
 	vec3 viewDir = normalize(u_ViewPos - fs_in.FragPos);
 	vec3 halfwayDir = normalize(lightDir + viewDir);
 	float specularStrength = 0.5;
@@ -124,21 +124,22 @@ void main() {
 	}
 	vec3 specular = specularStrength * spec * u_LightColor;
 
-	/* calculate shadow */
+	// calculate shadow 
 	//float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
 	// perform perspective divide
 	vec3 projCoords = fs_in.FragPosLightSpace.xyz / fs_in.FragPosLightSpace.w;
 	// transform to [0,1] range
 	projCoords = projCoords * 0.5 + 0.5;
 	// get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
-	float closestDepth = texture(u_ShadowMap, projCoords.xy).g;
+	float closestDepth = texture(u_ShadowMap, projCoords.xy).x;
 	// get depth of current fragment from light's perspective
 	float currentDepth = projCoords.z;
 	// check whether current frag pos is in shadow
-	float shadow = currentDepth > closestDepth ? 1.0 : 0.5;
+	float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
 
 
-	FragColor = vec4((ambient + (1.0 - shadow) * (diffuse + specular)) * objColor.xyz, objColor.w);
-	//shadow * objColor;//
+	FragColor = vec4(ambient, 1.0f) + ((1.0 - shadow) * u_ObjectColor);
+	//FragColor = vec4((ambient + (1.0 - shadow) * (diffuse + specular)) * objColor.xyz, objColor.w);
+	
 };
 

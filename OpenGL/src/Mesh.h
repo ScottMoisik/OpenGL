@@ -39,9 +39,10 @@ public:
 	Mesh(unsigned int numInstances) : m_NumInstances(numInstances) {}
 	Mesh(const std::string& filepath, unsigned int numInstances = 1);
 	~Mesh();
-	void Update();
+	void Update(float deltaTime, float scale, glm::vec3 trans, float angularVel, glm::vec3 rotAxis);
 	void Draw(const Shader& shader);
 	void SetColor(float r, float g, float b, float a) { m_Color.x = r; m_Color.y = g; m_Color.z = b; m_Color.w = a; }
+	glm::vec4 GetColor() { return m_Color; }
 
 	/* Factory functions */
 	static Mesh* Plane(unsigned int numInstances) {
@@ -73,7 +74,7 @@ public:
 			2, 3, 0
 			});
 
-		plane->SetupMesh2();
+		plane->SetupMesh();
 
 		return plane;
 		
@@ -128,7 +129,7 @@ public:
 			insertVertexIndicesLambda(4 * i);
 		}
 
-		cube->SetupMesh2();
+		cube->SetupMesh();
 
 		return cube;
 
@@ -162,7 +163,7 @@ public:
 		/* Indices for sphere top */
 		for (unsigned int sIdx = 0; sIdx < sphereDivisions + 1; sIdx++) {
 			unsigned int thirdIndex = sIdx + 2;
-			sphere->m_PositionIndices.insert(sphere->m_PositionIndices.end(), { 0, sIdx + 1, (thirdIndex > sphereDivisions ? 1 : thirdIndex) });
+			sphere->m_VertexIndices.insert(sphere->m_VertexIndices.end(), { 0, sIdx + 1, (thirdIndex > sphereDivisions ? 1 : thirdIndex) });
 		}
 		
 		/* Indices for inner sphere rings */
@@ -179,11 +180,11 @@ public:
 				if (lowIndex > currentBaseIndex) { lowIndex = (currentBaseIndex - sphereDivisions) + 1; }
 
 				/* Bottom triangle */
-				sphere->m_PositionIndices.insert(sphere->m_PositionIndices.end(), 
+				sphere->m_VertexIndices.insert(sphere->m_VertexIndices.end(),
 					{ bIdx, highIndex - 1, sharedIndex });
 
 				/* Top triangle */
-				sphere->m_PositionIndices.insert(sphere->m_PositionIndices.end(), 
+				sphere->m_VertexIndices.insert(sphere->m_VertexIndices.end(),
 					{ bIdx, sharedIndex, lowIndex });
 
 			}
@@ -194,7 +195,7 @@ public:
 		unsigned int finalIndex = (sphereDivisions * numRings) + 1;
 		for (unsigned int sIdx = finalRingStartIndex; sIdx < finalIndex - 1; sIdx++) {
 			unsigned int thirdIndex = sIdx + 2;
-			sphere->m_PositionIndices.insert(sphere->m_PositionIndices.end(), 
+			sphere->m_VertexIndices.insert(sphere->m_VertexIndices.end(),
 				{ sIdx + 1, (thirdIndex > finalIndex - 1 ? finalRingStartIndex + 1 : thirdIndex), finalIndex });
 		}
 
@@ -251,6 +252,6 @@ private:
 	/*  Functions */
 	void ParseMeshFile(const std::string& filepath);
 	void SetupMesh();
-	void SetupMesh2();
+
 };
 

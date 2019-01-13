@@ -16,8 +16,7 @@
 
 Mesh::Mesh(const std::string& filepath, unsigned int numInstances) : m_Filepath(filepath), m_NumInstances(numInstances) {
 	ParseMeshFile(filepath);
-	//SetupMesh();	
-	SetupMesh2();
+	SetupMesh();
 }
 
 Mesh::~Mesh() {
@@ -25,7 +24,18 @@ Mesh::~Mesh() {
 	//GLCall(glDeleteTextures(1, &m_RendererID));
 }
 
-void Mesh::Update() {	
+
+void Mesh::Update(float deltaTime, float scale, glm::vec3 trans, float angularVel, glm::vec3 rotAxis) {
+
+	// Define instance matrices
+	m_InstanceModelMatrices.clear();
+	m_InstanceMVPMatrices.clear();
+	
+	for (unsigned int i = 0; i < m_NumInstances; i++) {
+		m_InstanceModelMatrices.push_back(glm::translate(glm::mat4(1.0f), trans + glm::vec3(trans.x*(float)i, trans.x*(float)i, trans.z*(float)i)));
+		m_InstanceMVPMatrices.push_back(glm::rotate(glm::mat4(1.0f), angularVel*((float)deltaTime), rotAxis) * glm::scale(glm::mat4(1.0f), glm::vec3(scale, scale, scale)));
+	}
+
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[WORLD_MAT_VB]);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * m_NumInstances, &m_InstanceModelMatrices[0], GL_DYNAMIC_DRAW);
 
@@ -34,7 +44,6 @@ void Mesh::Update() {
 
 }
 
-
 void Mesh::Draw(const Shader& shader) {
 	shader.Bind();
 	m_VAO->Bind();
@@ -42,7 +51,7 @@ void Mesh::Draw(const Shader& shader) {
 }
 
 /* Uses the structure of arrays approach (one array for each attribute type) */
-void Mesh::SetupMesh2() {
+void Mesh::SetupMesh() {
 	/* Setup vertex array object */
 	m_VAO = std::make_unique<VertexArray>();
 	m_VAO->Bind();
@@ -99,67 +108,6 @@ void Mesh::SetupMesh2() {
 	m_VAO->Unbind();
 }
 
-void Mesh::SetupMesh() {
-	/* Compile vertex attributes (position, normal, texture coordinates, etc.) into the vertex array */
-	int numVertices = m_VertexIndexMap_PositionNormal.size();
-	m_Vertices.reserve(m_Positions.size() + m_Normals.size() + m_TextureCoordinates.size());
-
-	bool insertNormalsFlag = m_Normals.size() > 0;
-	bool insertTextureCoordsFlag = m_TextureCoordinates.size() > 0;
-	for (int i = 0; i < numVertices; i++) {
-		m_Vertices.insert(m_Vertices.end(), m_Positions.begin() + (i * m_Dimensions), m_Positions.begin() + (i * m_Dimensions) + m_Dimensions);
-		int j = i; //Nomral and texture arrays are now properly sorted so maps no longer necessary???
-		if (insertNormalsFlag) {
-			//int j = m_VertexIndexMap_PositionNormal[i];
-			glm::vec3 normal = glm::normalize(glm::vec3(m_Normals[j * 3], m_Normals[j * 3 + 1], m_Normals[j * 3 + 2]));
-
-			m_Vertices.push_back(normal.x);
-			m_Vertices.push_back(normal.y);
-			m_Vertices.push_back(normal.z);
-		}
-
-		if (insertTextureCoordsFlag) {
-			//int j = m_VertexIndexMap_PositionTexture[i];
-			m_Vertices.push_back(m_TextureCoordinates[j * 2]);
-			m_Vertices.push_back(m_TextureCoordinates[j * 2 + 1]);
-		}
-	}
-	
-	/* Setup vertex array object */
-	m_VAO = std::make_unique<VertexArray>();
-	m_VertexBuffer = std::make_unique<VertexBuffer>(&m_Vertices[0],
-		numVertices * (m_Dimensions
-			+ 3 * insertNormalsFlag
-			+ 2 * insertTextureCoordsFlag) * sizeof(float));
-	m_IndexBuffer = std::make_unique<IndexBuffer>(&m_VertexIndices[0], m_VertexIndices.size());
-
-	/* Specify the layout of the data in each vertex (position, normal, uv-coords*/
-	VertexBufferLayout layout;
-	layout.Push<float>(m_Dimensions);
-	if (insertNormalsFlag)
-		layout.Push<float>(3);
-	if (insertTextureCoordsFlag)
-		layout.Push<float>(2);
-	
-	/* Check if we need to do instanced rendering */
-	if (m_NumInstances > 1) { 
-		for (unsigned int i = 0; i < m_NumInstances; i++) {
-			float v1 = (rand() % 10 + 1) * 10.1f;
-			float v2 = (rand() % 10 + 1) * 10.1f;
-			float v3 = (rand() % 10 + 1) * 10.1f;
-			m_InstanceModelMatrices.push_back(glm::mat4(1.0f));//glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));//(v1, v2, v3)));
-		}
-
-		m_InstanceBuffer = std::make_unique<VertexBuffer>
-			(&m_InstanceModelMatrices[0], m_NumInstances * 16 * sizeof(float)); //4 vec4 columns in 4 x 4 matrix
-		
-		/* Specify the layout of the data in each vertex (model matrix)*/
-		layout.Push<glm::mat4>(1);
-	}
-
-	m_VAO->AddBuffer(*m_VertexBuffer, layout);
-
-}
 
 
 
@@ -318,4 +266,73 @@ std::vector<std::string> split(const std::string& s, char delimiter) {
 	}
 	return tokens;
 }
+*/
+
+
+
+/*
+
+
+void Mesh::SetupMesh() {
+	// Compile vertex attributes (position, normal, texture coordinates, etc.) into the vertex array
+int numVertices = m_VertexIndexMap_PositionNormal.size();
+m_Vertices.reserve(m_Positions.size() + m_Normals.size() + m_TextureCoordinates.size());
+
+bool insertNormalsFlag = m_Normals.size() > 0;
+bool insertTextureCoordsFlag = m_TextureCoordinates.size() > 0;
+for (int i = 0; i < numVertices; i++) {
+	m_Vertices.insert(m_Vertices.end(), m_Positions.begin() + (i * m_Dimensions), m_Positions.begin() + (i * m_Dimensions) + m_Dimensions);
+	int j = i; //Nomral and texture arrays are now properly sorted so maps no longer necessary???
+	if (insertNormalsFlag) {
+		//int j = m_VertexIndexMap_PositionNormal[i];
+		glm::vec3 normal = glm::normalize(glm::vec3(m_Normals[j * 3], m_Normals[j * 3 + 1], m_Normals[j * 3 + 2]));
+
+		m_Vertices.push_back(normal.x);
+		m_Vertices.push_back(normal.y);
+		m_Vertices.push_back(normal.z);
+	}
+
+	if (insertTextureCoordsFlag) {
+		//int j = m_VertexIndexMap_PositionTexture[i];
+		m_Vertices.push_back(m_TextureCoordinates[j * 2]);
+		m_Vertices.push_back(m_TextureCoordinates[j * 2 + 1]);
+	}
+}
+
+// Setup vertex array object 
+m_VAO = std::make_unique<VertexArray>();
+m_VertexBuffer = std::make_unique<VertexBuffer>(&m_Vertices[0],
+	numVertices * (m_Dimensions
+		+ 3 * insertNormalsFlag
+		+ 2 * insertTextureCoordsFlag) * sizeof(float));
+m_IndexBuffer = std::make_unique<IndexBuffer>(&m_VertexIndices[0], m_VertexIndices.size());
+
+// Specify the layout of the data in each vertex (position, normal, uv-coords
+VertexBufferLayout layout;
+layout.Push<float>(m_Dimensions);
+if (insertNormalsFlag)
+layout.Push<float>(3);
+if (insertTextureCoordsFlag)
+layout.Push<float>(2);
+
+// Check if we need to do instanced rendering 
+if (m_NumInstances > 1) {
+	for (unsigned int i = 0; i < m_NumInstances; i++) {
+		float v1 = (rand() % 10 + 1) * 10.1f;
+		float v2 = (rand() % 10 + 1) * 10.1f;
+		float v3 = (rand() % 10 + 1) * 10.1f;
+		m_InstanceModelMatrices.push_back(glm::mat4(1.0f));//glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)));//(v1, v2, v3)));
+	}
+
+	m_InstanceBuffer = std::make_unique<VertexBuffer>
+		(&m_InstanceModelMatrices[0], m_NumInstances * 16 * sizeof(float)); //4 vec4 columns in 4 x 4 matrix
+
+	// Specify the layout of the data in each vertex (model matrix)
+	layout.Push<glm::mat4>(1);
+}
+
+m_VAO->AddBuffer(*m_VertexBuffer, layout);
+
+}
+
 */

@@ -50,6 +50,14 @@ namespace Test {
  		m_Mesh = std::make_unique<Mesh>("res/meshes/earth.obj", numInstances);
 		m_Texture = std::make_unique<Texture>("res/textures/earth.jpg");
 
+		// Normal mapping example (brickwall)
+		m_TextureBrickDiffuse = std::make_unique<Texture>("res/textures/brickwall.jpg");
+		m_TextureBrickNormal = std::make_unique<Texture>("res/textures/brickwall_normal.jpg");
+		m_NormalMappingShader = std::make_unique<Shader>("res/shaders/NormalMapMeshInstanced.shader");
+		m_NormalMappingShader->Bind();
+		m_NormalMappingShader->SetUniform1i("u_DiffuseMap", 0);
+		m_NormalMappingShader->SetUniform1i("u_NormalMap", 1);
+
 		/* Load shaders for the scene */
 		m_SimpleShader = std::make_unique<Shader>("res/shaders/ColorOnly.shader");
 		m_SimpleShader->Bind();
@@ -59,13 +67,8 @@ namespace Test {
 		m_Shader->Bind();
 		m_Shader->SetUniform3f("u_LightColor", 0.6f, 0.6f, 0.6f);
 		m_Shader->SetUniform4f("u_ObjectColor", 0.8f, 0.3f, 0.8f, 1.0f);
-		m_Shader->SetUniform1i("u_Texture", 0);
-		m_Shader->SetUniform1i("u_ShadowMap", 1);
-		if (m_Texture != nullptr) {
-			m_Shader->SetUniform1b("u_UseTexturing", true);
-		} else {
-			m_Shader->SetUniform1b("u_UseTexturing", false);
-		}
+
+		m_Shader->SetUniform1b("u_UseTexturing", true);
 		m_Shader->Unbind();
 
 		/* Load depth shader for shadows */
@@ -88,9 +91,11 @@ namespace Test {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 
@@ -117,11 +122,12 @@ namespace Test {
 		m_MeshLight->Update(deltaTime, 1.0f, m_LightPosition, 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
+	enum ProjectionType { ORTHO, PERSPECTIVE };
 	void TestMesh::OnRender() {
 		GLCall(glClearColor(0.2f, 0.2f, 0.6f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 		
-		bool useOrthographicFlag = false;
+		ProjectionType projType = ProjectionType::ORTHO;
 
 		{
 			using namespace glm;
@@ -129,30 +135,29 @@ namespace Test {
 			
 			glm::mat4 lightProjection, lightView, lightSpaceMatrix;
 			float near_plane = -10.0f, far_plane = 10.0f;
-			if (useOrthographicFlag) {
-				lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+			if (projType == ORTHO) {
+				float range = 50.0;
+				lightProjection = glm::ortho(-range, range, -range, range, near_plane, far_plane);
 			} else {
 				lightProjection = glm::perspective(glm::radians(45.0f), 1.0f, near_plane, far_plane);
 			}
 
 			
 			lightView = glm::lookAt(m_LightPosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
-			//lightView = m_Camera->GetViewMatrix();
 			lightSpaceMatrix = lightProjection * lightView;
 
 			glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 			glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 			glClear(GL_DEPTH_BUFFER_BIT);
-			glActiveTexture(GL_TEXTURE1);
+			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, depthMap);
 
-			
+			//glCullFace(GL_FRONT);
 			m_DepthShader->Bind();
 			m_DepthShader->SetUniformMat4f("u_LightSpaceMatrix", lightSpaceMatrix);
-			
-			m_MeshPlane->Draw(*m_DepthShader);
 			m_MeshBox->Draw(*m_DepthShader);
 			m_Mesh->Draw(*m_DepthShader);
+			//glCullFace(GL_BACK); // don't forget to reset original culling face
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0); //Return to default frame buffer
 			
@@ -162,20 +167,11 @@ namespace Test {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			
 			/* Camera processing */
-			
-			//if (useOrthographicFlag) {
-			//	m_Proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
-			//} else {
-				m_Proj = glm::perspective(glm::radians(m_Camera->Zoom), m_Camera->m_AspectRatio, 1.0f, 1000.0f);
-			//}
+			m_Proj = glm::perspective(glm::radians(m_Camera->Zoom), m_Camera->m_AspectRatio, 1.0f, 1000.0f);
 			m_View = m_Camera->GetViewMatrix();
 			
 			
 			/*
-			m_Shader->SetUniformMat4f("u_M1", glm::mat4(1.0f));
-			m_Shader->SetUniformMat4f("u_M2", glm::mat4(1.0f));
-			m_Shader->SetUniformMat4f("u_M3", glm::mat4(1.0f));
-*/
 			glm::mat4 biasMatrix(
 				0.5, 0.0, 0.0, 0.0,
 				0.0, 0.5, 0.0, 0.0,
@@ -184,6 +180,8 @@ namespace Test {
 			);
 
 			glm::mat4 depthBiasMVP = biasMatrix * lightSpaceMatrix;
+			*/
+
 
 			/* Set uniforms for the basic shader */
 			mat4 model = translate(mat4(1.0f), m_LightPosition);
@@ -194,13 +192,20 @@ namespace Test {
 			m_SimpleShader->SetUniformMat4f("u_MVP", MVP);
 			m_MeshLight->Draw(*m_SimpleShader);
 
-			/* Set uniforms for the basic shader */
+			// Set uniforms for the basic shader
 			MVP = m_Proj * m_View * model; //GLM is column-major memory layout so requires reverse multiplication for MVP
 			model = translate(mat4(1.0f), m_Translation);
 			model = rotate(model, radians(m_Rotation), vec3(0.0f, 1.0f, 0.0f));
 
 			//Setup more complex shader for rest of objects
-			m_Shader->Bind();			
+			m_Shader->Bind();		
+			m_Shader->SetUniform1i("u_ShadowMap", 0);
+			m_Shader->SetUniform1i("u_Texture", 1);
+			
+			m_Shader->SetUniform1i("u_DiffuseMap", 2);
+			m_Shader->SetUniform1i("u_NormalMap", 3);
+			
+
 			m_Shader->SetUniformMat4f("u_MVP", MVP);
 			m_Shader->SetUniformMat4f("u_Proj", m_Proj);
 			m_Shader->SetUniformMat4f("u_View", m_View);
@@ -208,38 +213,37 @@ namespace Test {
 			m_Shader->SetUniform3f("u_ViewPos", m_Camera->Position.x, m_Camera->Position.y, m_Camera->Position.z);
 			m_Shader->SetUniform3f("u_LightPosition", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
 			m_Shader->SetUniform4f("u_ObjectColor", 0.5, 0.1, 0.1, 1.0f);
+			//m_Shader->SetUniform1b("u_UseTexturing", true);
 
+			m_Texture->Bind(1);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, depthMap);
 			m_MeshBox->Draw(*m_Shader);
 			
-			/* Setup textures for the mesh */
-			if (m_Texture != nullptr) {
-				//m_Texture->Bind();
-				m_Shader->SetUniform1b("u_UseTexturing", true);
-			} else {
-				m_Shader->SetUniform1b("u_UseTexturing", false);
-			}
-
-			/* Do draw call for mesh shader*/
+			// Do draw call for mesh shader
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, depthMap);
+			m_Texture->Bind(1);
 			m_Mesh->Draw(*m_Shader);
 
-			/* Setup textures for the plane */
-			if (m_PlaneTexture != nullptr) {
-				//m_PlaneTexture->Bind();
-				
-				
-				m_Shader->SetUniform1b("u_UseTexturing", true);
-			}
-			else {
-				m_Shader->SetUniform1b("u_UseTexturing", false);
-			}
+			m_PlaneTexture->Bind(1);
 
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, depthMap);
 			m_MeshPlane->Draw(*m_Shader);
 			//m_PlaneTexture->Unbind();
+
+			// render normal-mapped quad
+			glm::mat4 brickModel = glm::mat4(10.0f);
+			brickModel = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // rotate the quad to show normal mapping from multiple directions
+			m_NormalMappingShader->Bind();
+			m_NormalMappingShader->SetUniformMat4f("uModel", brickModel);
+			m_NormalMappingShader->SetUniform3f("u_ViewPos", m_Camera->Position.x, m_Camera->Position.y, m_Camera->Position.z);
+			m_NormalMappingShader->SetUniform3f("u_LightPos", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
+			m_TextureBrickDiffuse->Bind(0);
+			m_TextureBrickNormal->Bind(1);
+			renderQuad();
 
 
 			if (m_NormalVisualizationFlag) { 
@@ -256,9 +260,9 @@ namespace Test {
 			}
 
 			/* render depth map to quad for visual debugging */
-			glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+			glViewport(0, 0, 512, 512);
 			m_DebugDepthQuadShader->Bind();
-			m_DebugDepthQuadShader->SetUniform1b("u_OrthographicFlag", true);
+			m_DebugDepthQuadShader->SetUniform1b("u_OrthographicFlag", projType == ORTHO);
 			m_DebugDepthQuadShader->SetUniform1f("u_NearPlane", near_plane);
 			m_DebugDepthQuadShader->SetUniform1f("u_FarPlane", far_plane);
 			glActiveTexture(GL_TEXTURE0);
@@ -275,6 +279,15 @@ namespace Test {
 
 	}
 
+	void TestMesh::OnImGuiRender() {
+		//ImGui::SliderInt("shadow resolution factor", &m_ShadowResolution, 1, 4);
+		ImGui::SliderFloat3("translation", &m_Translation.x, -20.0f, 20.0f);
+		ImGui::SliderFloat("rotation", &m_Rotation, -180.0f, 180.0f);
+		ImGui::SliderFloat3("light_position", &m_LightPosition.x, -30.0f, 30.0f);
+		ImGui::Checkbox("normal visualization", &m_NormalVisualizationFlag);
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+	}
 
 	/* renderQuad() renders a 1x1 XY quad in NDC */
 	unsigned int quadVAO = 0;
@@ -306,12 +319,113 @@ namespace Test {
 		glBindVertexArray(0);
 	}
 
-	void TestMesh::OnImGuiRender() {
-		ImGui::SliderFloat3("translation", &m_Translation.x, -20.0f, 20.0f);
-		ImGui::SliderFloat("rotation", &m_Rotation, -180.0f, 180.0f);
-		ImGui::SliderFloat3("light_position", &m_LightPosition.x, -30.0f, 30.0f);
-		ImGui::Checkbox("normal visualization", &m_NormalVisualizationFlag);
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
+	// renders a 1x1 quad in NDC with manually calculated tangent vectors
+// ------------------------------------------------------------------
+	unsigned int quadNormalMapVAO = 0;
+	unsigned int quadNormalMapVBO;
+	void TestMesh::renderNormalMappedQuad() {
+		if (quadVAO == 0) {
+			// positions
+			glm::vec3 pos1(-1.0f, 1.0f, 0.0f);
+			glm::vec3 pos2(-1.0f, -1.0f, 0.0f);
+			glm::vec3 pos3(1.0f, -1.0f, 0.0f);
+			glm::vec3 pos4(1.0f, 1.0f, 0.0f);
+			// texture coordinates
+			glm::vec2 uv1(0.0f, 1.0f);
+			glm::vec2 uv2(0.0f, 0.0f);
+			glm::vec2 uv3(1.0f, 0.0f);
+			glm::vec2 uv4(1.0f, 1.0f);
+			// normal vector
+			glm::vec3 nm(0.0f, 0.0f, 1.0f);
+
+			// calculate tangent/bitangent vectors of both triangles
+			glm::vec3 tangent1, bitangent1;
+			glm::vec3 tangent2, bitangent2;
+			// triangle 1
+			// ----------
+			glm::vec3 edge1 = pos2 - pos1;
+			glm::vec3 edge2 = pos3 - pos1;
+			glm::vec2 deltaUV1 = uv2 - uv1;
+			glm::vec2 deltaUV2 = uv3 - uv1;
+
+			GLfloat f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+			tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+			tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+			tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+			tangent1 = glm::normalize(tangent1);
+
+			bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+			bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+			bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+			bitangent1 = glm::normalize(bitangent1);
+
+			// triangle 2
+			// ----------
+			edge1 = pos3 - pos1;
+			edge2 = pos4 - pos1;
+			deltaUV1 = uv3 - uv1;
+			deltaUV2 = uv4 - uv1;
+
+			f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+			tangent2.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+			tangent2.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+			tangent2.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+			tangent2 = glm::normalize(tangent2);
+
+
+			bitangent2.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+			bitangent2.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+			bitangent2.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+			bitangent2 = glm::normalize(bitangent2);
+
+
+			float quadVertices[] = {
+				// positions            // normal         // texcoords  // tangent                          // bitangent
+				pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+				pos2.x, pos2.y, pos2.z, nm.x, nm.y, nm.z, uv2.x, uv2.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+				pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+
+				pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+				pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+				pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z
+			};
+			// configure plane VAO
+			glGenVertexArrays(1, &quadNormalMapVAO);
+			glGenBuffers(1, &quadNormalMapVBO);
+			glBindVertexArray(quadNormalMapVAO);
+			glBindBuffer(GL_ARRAY_BUFFER, quadNormalMapVBO);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)0);
+			glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(3 * sizeof(float)));
+			glEnableVertexAttribArray(2);
+			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(6 * sizeof(float)));
+			glEnableVertexAttribArray(3);
+			glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(8 * sizeof(float)));
+			glEnableVertexAttribArray(4);
+			glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(11 * sizeof(float)));
+		}
+		glBindVertexArray(quadNormalMapVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glBindVertexArray(0);
 	}
+
+
 }
+
+
+
+//if (useOrthographicFlag) {
+//	m_Proj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
+//} else {
+
+
+			/*
+			m_Shader->SetUniformMat4f("u_M1", glm::mat4(1.0f));
+			m_Shader->SetUniformMat4f("u_M2", glm::mat4(1.0f));
+			m_Shader->SetUniformMat4f("u_M3", glm::mat4(1.0f));
+*/

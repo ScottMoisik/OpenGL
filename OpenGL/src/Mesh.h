@@ -221,6 +221,8 @@ private:
 	glm::vec4 m_Color;
 	std::vector<float> m_Positions;
 	std::vector<float> m_Normals;
+	std::vector<float> m_Tangents;
+	std::vector<float> m_Bitangents;
 	std::vector<float> m_TextureCoordinates;
 	std::vector<float> m_Vertices;
 	std::unordered_map<int, int> m_VertexIndexMap_PositionNormal;

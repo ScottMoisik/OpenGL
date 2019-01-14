@@ -1,0 +1,77 @@
+#pragma once
+//Assuming your trimesh is closed(whether convex or not) there is a way!
+//
+//As dmckee points out, the general approach is building tetrahedrons from each surface triangle, then applying the obvious math to total up the mass and moment contributions from each tet.The trick comes in when the surface of the body has concavities that make internal pockets when viewed from whatever your reference point is.
+//
+//So, to get started, pick some reference point(the origin in model coordinates will work fine), it doesn't even need to be inside of the body. For every triangle, connect the three points of that triangle to the reference point to form a tetrahedron. Here's the trick : use the triangle's surface normal to figure out if the triangle is facing towards or away from the reference point (which you can find by looking at the sign of the dot product of the normal and a vector pointing at the centroid of the triangle). If the triangle is facing away from the reference point, treat its mass and moment normally, but if it is facing towards the reference point (suggesting that there is open space between the reference point and the solid body), negate your results for that tet.
+//
+//Effectively what this does is over - count chunks of volume and then correct once those areas are shown to be not part of the solid body.If a body has lots of blubbery flanges and grotesque folds(got that image ? ), a particular piece of volume may be over - counted by a hefty factor, but it will be subtracted off just enough times to cancel it out if your mesh is closed.Working this way you can even handle internal bubbles of space in your objects(assuming the normals are set correctly).On top of that, each triangle can be handled independently so you can parallelize at will.Enjoy!
+//
+//Afterthought : You might wonder what happens when that dot product gives you a value at or near zero.This only happens when the triangle face is parallel(its normal is perpendicular) do the direction to the reference point -- which only happens for degenerate tets with small or zero area anyway.That is to say, the decision to add or subtract a tet's contribution is only questionable when the tet wasn't going to contribute anything anyway.
+
+
+
+//http://number-none.com/blow/inertia/index.html
+
+#include "Mesh.h"
+
+#include <vector>
+
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+
+struct InertialProps {
+	glm::mat3 C; //Covariance matrix
+	float mass; 
+	glm::vec3 com; //Center of mass
+};
+
+InertialProps ComputeIntertiaProperties(Mesh& mesh, float density) {
+
+	std::vector<float>& pos = mesh.GetPositions();
+	std::vector<unsigned int>& inds = mesh.GetIndices();
+
+	// Averaging vector
+	glm::vec3 avg = glm::vec3(1.0 / 4.0f); //Mean of four vertex coordinates
+
+	glm::mat3 I = glm::mat3(1.0f);
+
+	//Canonical tetrahedral covariance matrix
+	glm::mat3 C_canonical = glm::mat3(
+		1.0f / 60.0f, 1.0f / 120.0f, 1.0 / 120.0f,
+		1.0f / 120.0f, 1.0f / 60.0f, 1.0 / 120.0f,
+		1.0f / 120.0f, 1.0 / 120.0f, 1.0f / 60.0f);
+
+	//Accumulation values
+	float massTotal = 0.0f;
+	glm::vec3 centerOfMass = glm::vec3(0.0f);
+	glm::mat3 C = glm::mat3(0.0f); //Covariance matrix
+
+	//For each triangle, form a tetrahedron and compute its inertial properties
+	int numTriangles = inds.size() / 3;
+	for (int i = 0; i < numTriangles; i++) {
+		int p1 = inds[i * 3];
+		int p2 = inds[i * 3 + 1];
+		int p3 = inds[i * 3 + 2];
+		glm::mat3 A = glm::mat3(
+			pos[p1 * 3], pos[p1 * 3 + 1], pos[p1 * 3 + 2],
+			pos[p2 * 3], pos[p2 * 3 + 1], pos[p2 * 3 + 2],
+			pos[p3 * 3], pos[p3 * 3 + 1], pos[p3 * 3 + 2]);
+
+		float detA = glm::determinant(A);
+		C += detA * A * C_canonical * glm::transpose(A);
+
+		float mass = (density * (1.0f / 6.0f) * detA);
+		
+		glm::vec3 avgPos = (A * avg);
+		centerOfMass = ((centerOfMass * massTotal) + (avgPos * mass)) / (massTotal + mass);
+		
+		massTotal += mass;
+
+	}
+
+
+	//mass should be 8.37758041 (density = 2, radius = 1)
+	return { C, massTotal, centerOfMass };
+
+}

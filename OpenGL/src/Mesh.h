@@ -44,6 +44,9 @@ public:
 	void SetColor(float r, float g, float b, float a) { m_Color.x = r; m_Color.y = g; m_Color.z = b; m_Color.w = a; }
 	glm::vec4 GetColor() { return m_Color; }
 
+	std::vector<float>& GetPositions() { return m_Positions; }
+	std::vector<unsigned int>& GetIndices() { return m_VertexIndices; }
+
 	/* Factory functions */
 	static Mesh* Plane(unsigned int numInstances) {
 		Mesh* plane = new Mesh(numInstances);

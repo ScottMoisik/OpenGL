@@ -1,20 +1,18 @@
 #shader vertex
 #version 330 core
 
-layout(location = 0) in vec4 position;
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 texCoord;
+layout(location = 3) in mat4 instanceModel;
+layout(location = 7) in mat4 rotModel;
 
 out vec2 v_TexCoord;
 
 uniform mat4 u_MVP;
-/* M1-3: Additional matrices for debugging */
-uniform mat4 u_M1; 
-uniform mat4 u_M2;
-uniform mat4 u_M3;
-
 
 void main() {
-	gl_Position = u_MVP * u_M3 * u_M2 * u_M1 * position;
+	gl_Position = u_MVP * instanceModel * rotModel * vec4(position, 1.0);
 	v_TexCoord = texCoord;
 };
 

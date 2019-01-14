@@ -21,6 +21,7 @@
 #include "tests/TestClearColor.h"
 #include "tests/TestTexture2D.h"
 #include "tests/TestMesh.h"
+#include "tests/TestParticle.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -121,6 +122,7 @@ int main(void) {
 		testMenu->RegisterTest<Test::TestClearColor>("Clear Color");
 		testMenu->RegisterTest<Test::TestTexture2D>("Texture 2D");
 		testMenu->RegisterTest<Test::TestMesh>("Basic Mesh");
+		testMenu->RegisterTest<Test::TestParticle>("Particles");
 
 
 		while (!glfwWindowShouldClose(window)) {

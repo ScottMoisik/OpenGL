@@ -72,6 +72,9 @@
     <ClCompile Include="src\tests\TestMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\tests\TestParticle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
@@ -475,6 +478,9 @@
     <None Include="res\shaders\SimpleDepth.shader" />
     <None Include="res\shaders\DebugQuad.shader" />
     <None Include="res\shaders\ColorOnly.shader" />
+    <None Include="res\shaders\NormalMapMeshInstanced.shader" />
+    <None Include="res\shaders\ParallaxMappingInstanced.shader" />
+    <None Include="res\shaders\Particle.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">
@@ -1264,6 +1270,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tests\TestParticle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

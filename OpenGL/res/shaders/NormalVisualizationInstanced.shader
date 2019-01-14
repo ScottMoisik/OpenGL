@@ -12,8 +12,6 @@ out VS_OUT{
 
 uniform mat4 u_Proj;
 uniform mat4 u_View;
-uniform mat4 u_Model;
-uniform mat4 u_MVP;
 
 void main() {
 	gl_Position = u_Proj * u_View * instanceModel * rotModel * vec4(position, 1.0);

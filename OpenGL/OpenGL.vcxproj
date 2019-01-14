@@ -100,6 +100,7 @@
     <ClCompile Include="src\VertexArray.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\tests\TestMesh.cpp" />
+    <ClCompile Include="src\tests\TestParticle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
@@ -107,8 +108,11 @@
     <None Include="res\shaders\BasicMeshInstanced.shader" />
     <None Include="res\shaders\ColorOnly.shader" />
     <None Include="res\shaders\DebugQuad.shader" />
+    <None Include="res\shaders\NormalMapMeshInstanced.shader" />
     <None Include="res\shaders\NormalVisualization.shader" />
     <None Include="res\shaders\NormalVisualizationInstanced.shader" />
+    <None Include="res\shaders\ParallaxMappingInstanced.shader" />
+    <None Include="res\shaders\Particle.shader" />
     <None Include="res\shaders\SimpleDepth.shader" />
     <None Include="src\vendor\glm\detail\func_common.inl" />
     <None Include="src\vendor\glm\detail\func_common_simd.inl" />
@@ -506,6 +510,7 @@
     <ClInclude Include="src\VertexBufferLayout.h" />
     <ClInclude Include="src\Texture.h" />
     <ClInclude Include="src\tests\TestMesh.h" />
+    <ClInclude Include="src\tests\TestParticle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

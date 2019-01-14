@@ -53,12 +53,16 @@ namespace Test {
 		// Normal mapping example (brickwall)
 		m_TextureBrickDiffuse = std::make_unique<Texture>("res/textures/brickwall.jpg");
 		m_TextureBrickNormal = std::make_unique<Texture>("res/textures/brickwall_normal.jpg");
-		m_NormalMappingShader = std::make_unique<Shader>("res/shaders/NormalMapMeshInstanced.shader");
+		m_TextureBrickDepth = std::make_unique<Texture>("res/textures/brickwall_depth.jpg");
+		m_NormalMappingShader = std::make_unique<Shader>("res/shaders/ParallaxMappingInstanced.shader");
 		m_NormalMappingShader->Bind();
-		m_NormalMappingShader->SetUniform1i("u_DiffuseMap", 0);
-		m_NormalMappingShader->SetUniform1i("u_NormalMap", 1);
+		m_NormalMappingShader->SetUniform1i("u_DiffuseMap", 1);
+		m_NormalMappingShader->SetUniform1i("u_NormalMap", 2);
 
 		/* Load shaders for the scene */
+		m_BasicShader = std::make_unique<Shader>("res/shaders/Basic.shader");
+		m_BasicShader->Bind();
+
 		m_SimpleShader = std::make_unique<Shader>("res/shaders/ColorOnly.shader");
 		m_SimpleShader->Bind();
 		m_SimpleShader->SetUniform4f("u_ObjectColor", 0.8f, 0.8f, 1.0f, 0.7f);
@@ -190,7 +194,7 @@ namespace Test {
 			// Setup textures for the light
 			m_SimpleShader->Bind();
 			m_SimpleShader->SetUniformMat4f("u_MVP", MVP);
-			m_MeshLight->Draw(*m_SimpleShader);
+			//m_MeshLight->Draw(*m_SimpleShader);
 
 			// Set uniforms for the basic shader
 			MVP = m_Proj * m_View * model; //GLM is column-major memory layout so requires reverse multiplication for MVP
@@ -200,13 +204,8 @@ namespace Test {
 			//Setup more complex shader for rest of objects
 			m_Shader->Bind();		
 			m_Shader->SetUniform1i("u_ShadowMap", 0);
-			m_Shader->SetUniform1i("u_Texture", 1);
+			m_Shader->SetUniform1i("u_Texture", 1);			
 			
-			m_Shader->SetUniform1i("u_DiffuseMap", 2);
-			m_Shader->SetUniform1i("u_NormalMap", 3);
-			
-
-			m_Shader->SetUniformMat4f("u_MVP", MVP);
 			m_Shader->SetUniformMat4f("u_Proj", m_Proj);
 			m_Shader->SetUniformMat4f("u_View", m_View);
 			m_Shader->SetUniformMat4f("u_LightSpaceMatrix", lightSpaceMatrix);
@@ -216,7 +215,6 @@ namespace Test {
 			//m_Shader->SetUniform1b("u_UseTexturing", true);
 
 			m_Texture->Bind(1);
-
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, depthMap);
 			m_MeshBox->Draw(*m_Shader);
@@ -226,24 +224,41 @@ namespace Test {
 			glBindTexture(GL_TEXTURE_2D, depthMap);
 			m_Texture->Bind(1);
 			m_Mesh->Draw(*m_Shader);
-
+			
 			m_PlaneTexture->Bind(1);
-
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, depthMap);
 			m_MeshPlane->Draw(*m_Shader);
 			//m_PlaneTexture->Unbind();
 
+
+			
 			// render normal-mapped quad
-			glm::mat4 brickModel = glm::mat4(10.0f);
-			brickModel = glm::rotate(model, glm::radians((float)glfwGetTime() * -10.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // rotate the quad to show normal mapping from multiple directions
+			glm::mat4 brickModel = translate(mat4(1.0f), vec3(5.0f, 5.0f, 5.0f)) * scale(mat4(1.0f), vec3(2.0f));
+			//brickModel = glm::rotate(model, glm::radians((float)glfwGetTime() * 0.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0))); // rotate the quad to show normal mapping from multiple directions
 			m_NormalMappingShader->Bind();
-			m_NormalMappingShader->SetUniformMat4f("uModel", brickModel);
+			m_NormalMappingShader->SetUniform1i("u_ShadowMap", 0);
+			m_NormalMappingShader->SetUniform1i("u_DiffuseMap", 1);
+			m_NormalMappingShader->SetUniform1i("u_NormalMap", 2);
+			m_NormalMappingShader->SetUniform1i("u_DepthMap", 2);
+
 			m_NormalMappingShader->SetUniform3f("u_ViewPos", m_Camera->Position.x, m_Camera->Position.y, m_Camera->Position.z);
 			m_NormalMappingShader->SetUniform3f("u_LightPos", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
+
+			m_NormalMappingShader->SetUniformMat4f("u_Model", brickModel);
+			m_NormalMappingShader->SetUniformMat4f("u_View", m_View);
+			m_NormalMappingShader->SetUniformMat4f("u_Proj", m_Proj);
+			m_NormalMappingShader->SetUniformMat4f("u_LightSpaceMatrix", lightSpaceMatrix);
+			m_NormalMappingShader->SetUniform1f("heightScale", m_Rotation); // adjust with Q and E keys
+
+			m_TextureBrickDiffuse->Bind(1);
+			m_TextureBrickNormal->Bind(2);
+			m_TextureBrickDepth->Bind(3);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, depthMap);
 			m_TextureBrickDiffuse->Bind(0);
-			m_TextureBrickNormal->Bind(1);
-			renderQuad();
+			renderNormalMappedQuad();
 
 
 			if (m_NormalVisualizationFlag) { 
@@ -252,7 +267,6 @@ namespace Test {
 				m_NormalVisualizingShader->SetUniformMat4f("u_Proj", m_Proj);
 				m_NormalVisualizingShader->SetUniformMat4f("u_View", m_View);
 				m_NormalVisualizingShader->SetUniformMat4f("u_Model", model);
-				m_NormalVisualizingShader->SetUniformMat4f("u_MVP", MVP);
 
 				/* Do draw call for normal visualizing shader*/
 				m_Mesh->Draw(*m_NormalVisualizingShader); 
@@ -282,7 +296,7 @@ namespace Test {
 	void TestMesh::OnImGuiRender() {
 		//ImGui::SliderInt("shadow resolution factor", &m_ShadowResolution, 1, 4);
 		ImGui::SliderFloat3("translation", &m_Translation.x, -20.0f, 20.0f);
-		ImGui::SliderFloat("rotation", &m_Rotation, -180.0f, 180.0f);
+		ImGui::SliderFloat("rotation", &m_Rotation, 0.0f, 0.2f);
 		ImGui::SliderFloat3("light_position", &m_LightPosition.x, -30.0f, 30.0f);
 		ImGui::Checkbox("normal visualization", &m_NormalVisualizationFlag);
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -324,6 +338,7 @@ namespace Test {
 // ------------------------------------------------------------------
 	unsigned int quadNormalMapVAO = 0;
 	unsigned int quadNormalMapVBO;
+
 	void TestMesh::renderNormalMappedQuad() {
 		if (quadVAO == 0) {
 			// positions
@@ -408,6 +423,9 @@ namespace Test {
 			glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(8 * sizeof(float)));
 			glEnableVertexAttribArray(4);
 			glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(11 * sizeof(float)));
+
+
+		
 		}
 		glBindVertexArray(quadNormalMapVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 6);

@@ -19,12 +19,71 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/matrix_access.hpp"
 
 struct InertialProps {
 	glm::mat3 C; //Covariance matrix
 	float mass; 
 	glm::vec3 com; //Center of mass
 };
+
+
+// Tonon, F. (2005). Explicit Exact Formulas for the 3-D Tetrahedron Inertia Tensor in Terms of its Vertex Coordinates. Journal of Mathematics and Statistics, 1(1), 8–11. https://doi.org/10.3844/jmssp.2005.8.11
+InertialProps ComputeInertiaProperties(float density) {
+	using namespace glm;
+
+	vec3 A1 = vec3(8.33220, -11.86875, 0.93355);
+	vec3 A2 = vec3(0.75523, 5.000000, 16.37072);
+	vec3 A3 = vec3(52.61236, 5.000000, -5.38580);
+	vec3 A4 = vec3(2.000000, 5.000000, 3.000000);
+	
+	vec4 avg = vec4(1.0f / 4.0f);
+	vec3 centroid = A1 + A2 + A3 + A4;
+	centroid *= 0.25;
+	
+	auto poly = [](vec4 v) { return 
+		v[0] * v[0] + v[0] * v[1] + 
+		v[1] * v[1] + v[0] * v[2] + v[1] * v[2] + 
+		v[2] * v[2] + v[0] * v[3] + v[1] * v[3] + v[2] * v[3] + v[3] * v[3]; };
+	
+	vec3 A1c = A1 - centroid;
+	vec3 A2c = A2 - centroid;
+	vec3 A3c = A3 - centroid;
+	vec3 A4c = A4 - centroid;
+	vec4 xCol = vec4(A1c[0], A2c[0], A3c[0], A4c[0]);
+	vec4 yCol = vec4(A1c[1], A2c[1], A3c[1], A4c[1]);
+	vec4 zCol = vec4(A1c[2], A2c[2], A3c[2], A4c[2]);
+
+	mat3 A = mat3(A2c - A1c, A3c - A1c, A4c - A1c);
+	float detJ = determinant(A);
+	/*
+	float detJalt = //GLM is column major, access is [col][row]!!!
+		(A[0][0] * (A[1][1] * A[2][2] - A[2][1] * A[1][2])) -
+		(A[1][0] * (A[0][1] * A[2][2] - A[2][1] * A[0][2])) +
+		(A[2][0] * (A[0][1] * A[1][2] - A[1][1] * A[0][2]));
+		*/
+
+	float mass = density * abs(detJ);
+	float a = mass * (poly(yCol) + poly(zCol)) / 60.0f;
+	float b = mass * (poly(xCol) + poly(zCol)) / 60.0f;
+	float c = mass * (poly(xCol) + poly(yCol)) / 60.0f;
+
+	auto polyPrime = [](vec4 v, vec4 w) { return 
+		2 * v[0] * w[0] +     v[1] * w[0] +		v[2] * w[0] +		v[3] * w[0] + 
+		    v[0] * w[1] + 2 * v[1] * w[1] +		v[2] * w[1] +		v[3] * w[1] + 
+			v[0] * w[2] +     v[1] * w[2] + 2 * v[2] * w[2] +		v[3] * w[2] +
+			v[0] * w[3] +     v[1] * w[3] +		v[2] * w[3] +	2 * v[3] * w[3]; };
+
+	float aPrime = mass * (polyPrime(yCol, zCol)) / 120.0f;
+	float bPrime = mass * (polyPrime(xCol, zCol)) / 120.0f;
+	float cPrime = mass * (polyPrime(xCol, yCol)) / 120.0f;
+
+
+	int q = 1;
+	return { A, 0.0f, vec3(0.0f) };
+
+}
+
 
 InertialProps ComputeIntertiaProperties(Mesh& mesh, float density) {
 

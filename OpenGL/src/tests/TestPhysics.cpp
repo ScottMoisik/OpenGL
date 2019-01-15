@@ -13,6 +13,7 @@
 #include <algorithm>
 
 #include "physics/Inertia.h"
+#include "physics/MassProperties.h"
 
 namespace Test {
 	std::unique_ptr<Mesh> m_Sphere;
@@ -40,7 +41,12 @@ namespace Test {
 		m_Texture = std::make_unique<Texture>("res/textures/marble.jpg");
 
 		m_Sphere = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SphereDivisions::res32, 1);
-		InertialProps ip = ComputeInertiaProperties(1.0f);// *m_Sphere, 2.0f);
+		//InertialProps ip = ComputeInertiaProperties(1.0f);// *m_Sphere, 2.0f);
+		MassProperties mp(*m_Sphere);
+
+
+
+
 
 		// Load shaders for the scene
 		m_BasicShader = std::make_unique<Shader>("res/shaders/Basic.shader");

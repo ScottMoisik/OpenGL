@@ -254,6 +254,7 @@
     <ClInclude Include="src\Mesh.h" />
     <ClInclude Include="src\App.h" />
     <ClInclude Include="src\physics\Inertia.h" />
+    <ClInclude Include="src\physics\InertiaTensor.h" />
     <ClInclude Include="src\physics\MassProperties.h" />
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\IndexBuffer.h" />

@@ -1293,5 +1293,8 @@
     <ClInclude Include="src\physics\MassProperties.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\physics\InertiaTensor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

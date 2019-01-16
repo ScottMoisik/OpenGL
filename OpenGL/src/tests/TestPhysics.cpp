@@ -17,6 +17,7 @@
 
 namespace Test {
 	std::unique_ptr<Mesh> m_Sphere;
+	std::unique_ptr<Mesh> m_Tet;
 
 	TestPhysics::TestPhysics() : 
 		m_Proj(glm::perspective(glm::radians(45.0f), 3.0f / 4.0f, 0.1f, 100.0f)),
@@ -42,10 +43,16 @@ namespace Test {
 
 		m_Sphere = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SphereDivisions::res32, 1);
 		//InertialProps ip = ComputeInertiaProperties(1.0f);// *m_Sphere, 2.0f);
-		MassProperties mp(*m_Sphere);
+		//MassProperties mp(*m_Sphere);
 
+		glm::vec3 A1 = glm::vec3(8.33220, -11.86875, 0.93355);
+		glm::vec3 A2 = glm::vec3(0.75523, 5.000000, 16.37072);
+		glm::vec3 A3 = glm::vec3(52.61236, 5.000000, -5.38580);
+		glm::vec3 A4 = glm::vec3(2.000000, 5.000000, 3.000000);
+		m_Tet = (std::unique_ptr<Mesh>)Mesh::Tetrahedron(1, A1, A2, A3, A4);
+		MassProperties mp(*m_Tet);
 
-
+		
 
 
 		// Load shaders for the scene

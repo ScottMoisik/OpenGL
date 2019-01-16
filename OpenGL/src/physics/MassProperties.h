@@ -17,30 +17,52 @@ struct MassProps {
 
 class MassProperties {
 public:
-	MassProperties(Mesh& mesh) : _m(0.0), _Cx(0.0), _Cy(0.0), _Cz(0.0) {
+	MassProperties(Mesh& mesh) : _m(0.0), _Cx(0.0), _Cy(0.0), _Cz(0.0), _xx(0.0), _yy(0.0), _zz(0.0), _yx(0.0), _zx(0.0), _zy(0.0) {
 		std::vector<float>& pos = mesh.GetPositions();
 		std::vector<unsigned int>& inds = mesh.GetIndices();
 
 		//For each triangle, form a tetrahedron and compute its inertial properties
+		glm::vec3 avgRecipe = glm::vec3(1.0f / 3.0f, 1.0f / 3.0f, 1.0f / 3.0f);
 		int numTriangles = inds.size() / 3;
-		for (int i = 0; i < numTriangles; i++) {
-			int p3 = inds[i * 3];
-			int p2 = inds[i * 3 + 1];
-			int p1 = inds[i * 3 + 2];
+		for (int idx = 0; idx < numTriangles; idx++) {
+			int i = inds[idx * 3];
+			int j = inds[idx * 3 + 1];
+			int k = inds[idx * 3 + 2];
+			glm::vec3 v1 = glm::vec3(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
+			glm::vec3 v2 = glm::vec3(pos[j * 3], pos[j * 3 + 1], pos[j * 3 + 2]);
+			glm::vec3 v3 = glm::vec3(pos[k * 3], pos[k * 3 + 1], pos[k * 3 + 2]);
 
 			glm::mat3 A = glm::mat3(
-				pos[p1 * 3], pos[p1 * 3 + 1], pos[p1 * 3 + 2],
-				pos[p2 * 3], pos[p2 * 3 + 1], pos[p2 * 3 + 2],
-				pos[p3 * 3], pos[p3 * 3 + 1], pos[p3 * 3 + 2]);
+				v1.x, v1.y, v1.z,
+				v2.x, v2.y, v2.z,
+				v3.x, v3.y, v3.z);
+
+			glm::mat3 Aprime = glm::mat3(
+				v1.x, v1.y, v1.z,
+				v3.x, v3.y, v3.z,				
+				v2.x, v2.y, v2.z);
 
 			// Compute the determinant and make sure it is not negative (and if it is, flip the order of the vertices)
 			float detA = glm::determinant(A);
+			float detAprime = glm::determinant(Aprime);
 
-			// GLM matrices are column major and accessed [col][row]
-			AddTriangleContribution(
-				A[0][0], A[1][0], A[2][0],
-				A[0][1], A[1][1], A[2][1],
-				A[0][2], A[1][2], A[2][2]);
+			//Check that the origin is on the inside of the facet
+			glm::vec3 avg = A * avgRecipe;
+			glm::vec3 normal = glm::normalize(glm::cross(v2 - v1, v3 - v1));
+			float dotProd = glm::dot(avg, normal);
+
+			//If the origin is on the inner side of the face, the determinant must be positive
+			if (dotProd < 0) {
+				AddTriangleContribution(
+					v1.x, v1.y, v1.z,
+					v2.x, v2.y, v2.z,
+					v3.x, v3.y, v3.z);
+			} else {
+				AddTriangleContribution(
+					v1.x, v1.y, v1.z,
+					v3.x, v3.y, v3.z,
+					v2.x, v2.y, v2.z);
+			}			
 		}
 
 		double _Ixx, _Iyy, _Izz,
@@ -63,9 +85,26 @@ void AddTriangleContribution(
 	double x2, double y2, double z2,    // Triangle's vertex 2
 	double x3, double y3, double z3)    // Triangle's vertex 3
 {
+	
+	glm::mat3 A = glm::mat3(
+		x1, y1, z1,
+		x2, y2, z2,
+		x3, y3, z3);
+
+	glm::mat3 Aprime = glm::mat3(
+		x1, y1, z1,
+		x3, y3, z3,
+		x2, y2, z2);
+
+
+	// Compute the determinant and make sure it is not negative (and if it is, flip the order of the vertices)
+	float detA = glm::determinant(A);
+	float detAprime = glm::determinant(Aprime);
+
+	
+	
 	// Signed volume of this tetrahedron.
-	double v = x1 * y2*z3 + y1 * z2*x3 + x2 * y3*z1 -
-		(x3*y2*z1 + x2 * y1*z3 + y3 * z2*x1);
+	double v = x1 * y2*z3 + y1 * z2*x3 + x2 * y3*z1 - (x3*y2*z1 + x2 * y1*z3 + y3 * z2*x1);
 
 	// Contribution to the mass
 	_m += v;

@@ -85,6 +85,33 @@ public:
 
 
 	/* Factory functions */
+	static Mesh* Tetrahedron(unsigned int numInstances, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
+		Mesh* tet = new Mesh(numInstances);
+		tet->m_Positions.insert(tet->m_Positions.end(), { v0.x, v0.y, v0.z });
+		tet->m_Positions.insert(tet->m_Positions.end(), { v1.x, v1.y, v1.z });
+		tet->m_Positions.insert(tet->m_Positions.end(), { v2.x, v2.y, v2.z });
+		tet->m_Positions.insert(tet->m_Positions.end(), { v3.x, v3.y, v3.z });
+
+		glm::vec3 n0 = glm::cross(v1 - v0, v2 - v0);
+		glm::vec3 n1 = glm::cross(v1 - v0, v3 - v0);
+		glm::vec3 n2 = glm::cross(v2 - v1, v3 - v1);
+		glm::vec3 n3 = glm::cross(v3 - v2, v0 - v2);
+
+		tet->m_Normals.insert(tet->m_Normals.end(), { 
+			n0.x, n0.y, n0.z, 
+			n1.x, n1.y, n1.z,
+			n2.x, n2.y, n2.z,
+			n3.x, n3.y, n3.z});
+
+		tet->m_VertexIndices.insert(tet->m_VertexIndices.end(), { 
+			0, 1, 2,
+			0, 1, 3,
+			1, 2, 3,
+			2, 3, 0});
+
+		return tet;
+	}
+
 	static Mesh* Cube(unsigned int numInstances) {
 		Mesh* cube = new Mesh(numInstances);
 		const float PI = 3.14159265358979323846f  /* pi */;

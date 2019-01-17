@@ -27,7 +27,7 @@ namespace Test {
 		std::unique_ptr<VertexArray> m_VAO;
 		std::unique_ptr<VertexBuffer> m_VertexBuffer;
 		std::unique_ptr<IndexBuffer> m_IndexBuffer;
-		std::unique_ptr<Shader> m_BasicShader;
+		std::unique_ptr<Shader> m_BasicShader, m_NormalVisualizingShader;
 		std::unique_ptr<Texture> m_Texture;
 		glm::mat4 m_Proj, m_View;
 		float m_ViewPortWidth, m_ViewPortHeight, m_AspectRatio;

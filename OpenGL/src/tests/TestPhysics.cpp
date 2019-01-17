@@ -18,6 +18,7 @@
 namespace Test {
 	std::unique_ptr<Mesh> m_Sphere;
 	std::unique_ptr<Mesh> m_Tet;
+	bool m_NormalVisualizationFlag = false;
 
 	TestPhysics::TestPhysics() : 
 		m_Proj(glm::perspective(glm::radians(45.0f), 3.0f / 4.0f, 0.1f, 100.0f)),
@@ -41,7 +42,7 @@ namespace Test {
 		m_Mesh->SetColor(0.2f, 0.2f, 0.6f, 1.0f);
 		m_Texture = std::make_unique<Texture>("res/textures/marble.jpg");
 
-		m_Sphere = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SphereDivisions::res32, 1);
+		//m_Sphere = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SphereDivisions::res32, 1);
 		//InertialProps ip = ComputeInertiaProperties(1.0f);// *m_Sphere, 2.0f);
 		//MassProperties mp(*m_Sphere);
 
@@ -49,16 +50,17 @@ namespace Test {
 		glm::vec3 A2 = glm::vec3(0.75523, 5.000000, 16.37072);
 		glm::vec3 A3 = glm::vec3(52.61236, 5.000000, -5.38580);
 		glm::vec3 A4 = glm::vec3(2.000000, 5.000000, 3.000000);
-		m_Tet = (std::unique_ptr<Mesh>)Mesh::Tetrahedron(1, A1, A2, A3, A4);
-		MassProperties mp(*m_Tet);
-
-		
-
+/*
+		glm::vec3 A1 = glm::vec3(0.0, 0.0, 0.0);
+		glm::vec3 A2 = glm::vec3(1.0, 0.0, 0.0);
+		glm::vec3 A3 = glm::vec3(0.0, 1.0, 0.0);
+		glm::vec3 A4 = glm::vec3(0.0, 0.0, 1.0);*/
+		m_Mesh = (std::unique_ptr<Mesh>)Mesh::Tetrahedron(1, A1, A2, A3, A4);
+		//MassProperties mp(*m_Tet);
 
 		// Load shaders for the scene
-		m_BasicShader = std::make_unique<Shader>("res/shaders/Basic.shader");
-
-		
+		m_BasicShader = std::make_unique<Shader>("res/shaders/BasicInstanced.shader");		
+		m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualizationInstanced.shader");
 
 
 	}
@@ -68,7 +70,7 @@ namespace Test {
 	}
 
 	void TestPhysics::OnUpdate(float deltaTime) {
-		m_Mesh->Update(deltaTime, 100.0f, glm::vec3(0.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		m_Mesh->Update(deltaTime, 1.0f, glm::vec3(0.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
 	enum ProjectionType { ORTHO, PERSPECTIVE };
@@ -76,13 +78,13 @@ namespace Test {
 		GLCall(glClearColor(0.2f, 0.2f, 0.6f, 1.0f));
 		GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-		ProjectionType projType = ProjectionType::ORTHO;
+		ProjectionType projType = ProjectionType::PERSPECTIVE;
 
 		{
 			using namespace glm;
 
 			glm::mat4 lightProjection, lightView, lightSpaceMatrix;
-			float near_plane = -10.0f, far_plane = 10.0f;
+			float near_plane = -10.0f, far_plane = 30.0f;
 			if (projType == ORTHO) {
 				float range = 50.0;
 				lightProjection = glm::ortho(-range, range, -range, range, near_plane, far_plane);
@@ -101,15 +103,28 @@ namespace Test {
 			
 			// Set uniforms for the basic shader
 			m_BasicShader->Bind();
-			m_BasicShader->SetUniformMat4f("u_MVP", MVP);
+			m_BasicShader->SetUniformMat4f("u_Proj", m_Proj);
+			m_BasicShader->SetUniformMat4f("u_View", m_View);
 			m_BasicShader->SetUniform1i("u_Texture", 0);
 			m_Texture->Bind(0);
 			m_Mesh->Draw(*m_BasicShader);
 			
+			if (m_NormalVisualizationFlag) {
+				/* Set uniforms for the normal visualizing shader */
+				m_NormalVisualizingShader->Bind();
+				m_NormalVisualizingShader->SetUniformMat4f("u_Proj", m_Proj);
+				m_NormalVisualizingShader->SetUniformMat4f("u_View", m_View);
+
+				/* Do draw call for normal visualizing shader*/
+				m_Mesh->Draw(*m_NormalVisualizingShader);
+				m_NormalVisualizingShader->Unbind();
+			}
+
 		}
 	}
 
 	void TestPhysics::OnImGuiRender() {
+		ImGui::Checkbox("normal visualization", &m_NormalVisualizationFlag);
 	}
 
 	void TestPhysics::RenderScene() {

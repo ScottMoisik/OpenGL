@@ -9,10 +9,11 @@ layout(location = 7) in mat4 rotModel;
 
 out vec2 v_TexCoord;
 
-uniform mat4 u_MVP;
+uniform mat4 u_Proj;
+uniform mat4 u_View;
 
 void main() {
-	gl_Position = u_MVP * instanceModel * rotModel * vec4(position, 1.0);
+	gl_Position = u_Proj * u_View * instanceModel * rotModel * vec4(position, 1.0);
 	v_TexCoord = texCoord;
 };
 

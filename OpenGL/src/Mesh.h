@@ -84,30 +84,37 @@ public:
 	}
 
 
+	//Winding order checking algorithm: http://www.dillonbhuff.com/?p=30
+
 	/* Factory functions */
 	static Mesh* Tetrahedron(unsigned int numInstances, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
 		Mesh* tet = new Mesh(numInstances);
-		tet->m_Positions.insert(tet->m_Positions.end(), { v0.x, v0.y, v0.z });
-		tet->m_Positions.insert(tet->m_Positions.end(), { v1.x, v1.y, v1.z });
-		tet->m_Positions.insert(tet->m_Positions.end(), { v2.x, v2.y, v2.z });
-		tet->m_Positions.insert(tet->m_Positions.end(), { v3.x, v3.y, v3.z });
 
-		glm::vec3 n0 = glm::cross(v1 - v0, v2 - v0);
-		glm::vec3 n1 = glm::cross(v1 - v0, v3 - v0);
-		glm::vec3 n2 = glm::cross(v2 - v1, v3 - v1);
-		glm::vec3 n3 = glm::cross(v3 - v2, v0 - v2);
+		/* Use a lambda to shorten the code for inserting positions */
+		auto buildTetLambda = [&tet](glm::vec3 a, glm::vec3 b, glm::vec3 c) { 
+			tet->m_Positions.insert(tet->m_Positions.end(), { a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z }); 
+			glm::vec3 n0 = glm::normalize(glm::cross(b - a, c - a));
+			tet->m_Normals.insert(tet->m_Normals.end(), { n0.x, n0.y, n0.z, n0.x, n0.y, n0.z, n0.x, n0.y, n0.z });
+		};
 
-		tet->m_Normals.insert(tet->m_Normals.end(), { 
-			n0.x, n0.y, n0.z, 
-			n1.x, n1.y, n1.z,
-			n2.x, n2.y, n2.z,
-			n3.x, n3.y, n3.z});
+		buildTetLambda(v0, v1, v3);
+		buildTetLambda(v1, v2, v3);
+		buildTetLambda(v0, v3, v2);
+		buildTetLambda(v0, v2, v1);
+
+		tet->m_TextureCoordinates.insert(tet->m_TextureCoordinates.end(), { 
+			0.0, 0.0, 1.0, 0.0, 0.5, 0.5,
+			1.0, 0.0, 1.0, 1.0, 0.5, 0.5,
+			1.0, 1.0, 0.0, 1.0, 0.5, 0.5,
+			0.0, 1.0, 0.0, 0.0, 0.5, 0.5});
 
 		tet->m_VertexIndices.insert(tet->m_VertexIndices.end(), { 
 			0, 1, 2,
-			0, 1, 3,
-			1, 2, 3,
-			2, 3, 0});
+			3, 4, 5,
+			6, 7, 8,
+			9, 10, 11});
+
+		tet->SetupMesh();
 
 		return tet;
 	}

@@ -106,6 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
+    <None Include="res\shaders\BasicInstanced.shader" />
     <None Include="res\shaders\BasicMesh.shader" />
     <None Include="res\shaders\BasicMeshInstanced.shader" />
     <None Include="res\shaders\ColorOnly.shader" />

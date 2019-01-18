@@ -253,7 +253,14 @@ public:
 		return sphere;
 	}
 private:
-	/*  Mesh Data  */
+	struct Triangle {
+		glm::vec3 p0, p1, p2, normal;
+		int i0, i1, i2;
+		std::vector<Triangle*> neighbours;
+	};
+	std::vector<Triangle> m_Faces;
+
+	//  Mesh Data 
 	unsigned int m_Dimensions = 0;
 	glm::vec4 m_Color;
 	std::vector<float> m_Positions;
@@ -291,6 +298,6 @@ private:
 	/*  Functions */
 	void ParseMeshFile(const std::string& filepath);
 	void SetupMesh();
-
+	void FixWinding();
 };
 

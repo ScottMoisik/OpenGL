@@ -52,6 +52,9 @@ void Mesh::Draw(const Shader& shader) {
 
 /* Uses the structure of arrays approach (one array for each attribute type) */
 void Mesh::SetupMesh() {
+	// Ensure that the winding order is correct 
+	FixWinding();
+
 	/* Setup vertex array object */
 	m_VAO = std::make_unique<VertexArray>();
 	m_VAO->Bind();
@@ -106,6 +109,62 @@ void Mesh::SetupMesh() {
 	}
 	
 	m_VAO->Unbind();
+}
+
+
+
+
+void Mesh::FixWinding() {
+	using namespace glm;
+	
+	// Create faces
+	int numFaces = m_VertexIndices.size() / 3;
+	for (int fIdx = 0; fIdx < numFaces; fIdx++) {
+		int i = m_VertexIndices[fIdx * 3];
+		int j = m_VertexIndices[fIdx * 3 + 1];
+		int k = m_VertexIndices[fIdx * 3 + 2];
+		vec3 p0 = vec3(m_Positions[i * 3], m_Positions[i * 3 + 1], m_Positions[i * 3 + 2]);
+		vec3 p1 = vec3(m_Positions[j * 3], m_Positions[j * 3 + 1], m_Positions[j * 3 + 2]);
+		vec3 p2 = vec3(m_Positions[k * 3], m_Positions[k * 3 + 1], m_Positions[k * 3 + 2]);
+		vec3 normal = normalize(cross(p1 - p0, p2 - p1));
+
+		Triangle tri = { p0, p1, p2, normal, i, j, k };
+		m_Faces.push_back(tri);
+
+	}
+
+	// Determine connectivity of faces by using the positions (since indices may not necessarily be shared if separate vertices between adjacent faces are used for lighting purposes, as in the case of the cube)
+	for (Triangle& face1 : m_Faces) {
+		
+		// Search through all faces and find all edge neighbours (vertex neighbours are ignored)
+		for (Triangle& face2 : m_Faces) {
+			if (&face1 != &face2) {
+				int p0Match = (face1.p0 == face2.p0 || face1.p0 == face2.p1 || face1.p0 == face2.p2);
+				int p1Match = (face1.p1 == face2.p0 || face1.p1 == face2.p1 || face1.p1 == face2.p2);
+				int p2Match = (face1.p2 == face2.p0 || face1.p2 == face2.p1 || face1.p2 == face2.p2);
+
+				if (p0Match + p1Match + p2Match == 2) {
+					face1.neighbours.push_back(&face2);
+				}
+
+				//If three neighbours have been found, stop as there is no more point in searching
+				if (face1.neighbours.size() == 3) {
+					break;
+				}
+			}
+		}
+	}
+
+	std::vector<int> correctedFaces;
+
+	for (Triangle& face : m_Faces) {
+		//face.p0 
+	}
+
+	//
+
+
+	int ththt = 1;
 }
 
 

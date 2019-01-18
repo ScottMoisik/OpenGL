@@ -38,8 +38,8 @@ namespace Test {
 		GLCall(glEnable(GL_DEPTH_TEST));
 
 		//Load meshes
-		m_Mesh = (std::unique_ptr<Mesh>)Mesh::Plane(1);
-		m_Mesh->SetColor(0.2f, 0.2f, 0.6f, 1.0f);
+		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Plane(1);
+		//m_Mesh->SetColor(0.2f, 0.2f, 0.6f, 1.0f);
 		m_Texture = std::make_unique<Texture>("res/textures/marble.jpg");
 
 		//m_Sphere = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SphereDivisions::res32, 1);

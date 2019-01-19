@@ -13,7 +13,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 
-
 Mesh::Mesh(const std::string& filepath, unsigned int numInstances) : m_Filepath(filepath), m_NumInstances(numInstances) {
 	ParseMeshFile(filepath);
 	SetupMesh();
@@ -30,7 +29,7 @@ void Mesh::Update(float deltaTime, float scale, glm::vec3 trans, float angularVe
 	// Define instance matrices
 	m_InstanceModelMatrices.clear();
 	m_InstanceMVPMatrices.clear();
-	
+
 	for (unsigned int i = 0; i < m_NumInstances; i++) {
 		m_InstanceModelMatrices.push_back(glm::translate(glm::mat4(1.0f), trans + glm::vec3(trans.x*(float)i, trans.x*(float)i, trans.z*(float)i)));
 		m_InstanceMVPMatrices.push_back(glm::rotate(glm::mat4(1.0f), angularVel*((float)deltaTime), rotAxis) * glm::scale(glm::mat4(1.0f), glm::vec3(scale, scale, scale)));
@@ -58,7 +57,7 @@ void Mesh::SetupMesh() {
 	// Ensure that the winding order is correct 
 	FixWinding();
 
-	
+
 
 	/* Setup vertex array object */
 	m_VAO = std::make_unique<VertexArray>();
@@ -66,7 +65,7 @@ void Mesh::SetupMesh() {
 
 	/* Create the array buffers for the vertex atttributes */
 	glGenBuffers(ARRAY_SIZE(m_Buffers), m_Buffers);
-	
+
 	/* Reserve space in the vectors for the vertex attributes and indices */
 	// Generate and populate the buffers with vertex attributes and the indices
 	glBindBuffer(GL_ARRAY_BUFFER, m_Buffers[POS_VB]);
@@ -112,7 +111,7 @@ void Mesh::SetupMesh() {
 		glVertexAttribPointer(attributePosition, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(i * vec4Size));
 		glVertexAttribDivisor(attributePosition, 1);
 	}
-	
+
 	m_VAO->Unbind();
 }
 
@@ -165,8 +164,8 @@ void Mesh::CreateFaces() {
 
 void Mesh::FixWinding() {
 	using namespace glm;
-	
-	
+
+
 	//Systematically search all faces and correct the winding using the first face as the standard
 	Face* face = &m_Faces[0];
 	std::vector<Face*> checkedFaces;
@@ -247,7 +246,7 @@ void Mesh::FixWinding() {
 			m_Normals[j * 3 + 2] = m_Faces[fIdx].normal.z;
 		}
 	}
-	
+
 	int ththt = 1;
 }
 
@@ -361,7 +360,7 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 		}
 	}
 
-	
+
 	/* Map position and normal indices based on the face data */
 	for (int i = 0; i < m_VertexIndices.size(); i++) {
 		if (m_VertexIndexMap_PositionNormal.find(m_VertexIndices[i]) == m_VertexIndexMap_PositionNormal.end()) {
@@ -390,7 +389,7 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 		m_TextureCoordinates.push_back(texCoordTemp[j]);
 		m_TextureCoordinates.push_back(texCoordTemp[j + 1]);
 	}
-	
+
 	auto end = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<float> duration = end - start;
@@ -399,6 +398,8 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 	//	std::cout << "Unable to read file " << m_Filepath << std::endl;
 	//}
 }
+
+
 /*
 std::vector<std::string> split(const std::string& s, char delimiter) {
 	std::vector<std::string> tokens;
@@ -442,7 +443,7 @@ for (int i = 0; i < numVertices; i++) {
 	}
 }
 
-// Setup vertex array object 
+// Setup vertex array object
 m_VAO = std::make_unique<VertexArray>();
 m_VertexBuffer = std::make_unique<VertexBuffer>(&m_Vertices[0],
 	numVertices * (m_Dimensions
@@ -458,7 +459,7 @@ layout.Push<float>(3);
 if (insertTextureCoordsFlag)
 layout.Push<float>(2);
 
-// Check if we need to do instanced rendering 
+// Check if we need to do instanced rendering
 if (m_NumInstances > 1) {
 	for (unsigned int i = 0; i < m_NumInstances; i++) {
 		float v1 = (rand() % 10 + 1) * 10.1f;

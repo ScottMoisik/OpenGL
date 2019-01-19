@@ -83,6 +83,7 @@
   <ItemGroup>
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
+    <ClCompile Include="src\physics\InertiaTensor.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\App.cpp" />
     <ClCompile Include="src\IndexBuffer.cpp" />

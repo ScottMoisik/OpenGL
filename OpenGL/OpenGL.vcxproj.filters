@@ -488,6 +488,8 @@
     <None Include="res\shaders\ParallaxMappingInstanced.shader" />
     <None Include="res\shaders\Particle.shader" />
     <None Include="res\shaders\BasicInstanced.shader" />
+    <None Include="res\shaders\BasicLightingInstanced.shader" />
+    <None Include="res\shaders\NormalVisualizationFaceInstanced.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">

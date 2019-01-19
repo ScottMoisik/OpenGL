@@ -12,18 +12,34 @@
 
 #include <algorithm>
 
-#include "physics/Inertia.h"
-#include "physics/MassProperties.h"
+//#include "physics/Inertia.h"
+#include "physics/InertiaTensor.h"
+//#include "physics/MassProperties.h"
 
 namespace Test {
+
+	class RigidBody{
+	public:
+		RigidBody(std::shared_ptr<Mesh> mesh, float density) : m_Mesh(mesh), m_Density(density) {
+			m_MassProps = InertiaTensor::Compute(mesh, density);
+		}
+		~RigidBody() {};
+
+	private:
+		std::shared_ptr<Mesh> m_Mesh;
+		float m_Density;
+		InertiaTensor::MassProps m_MassProps; //Inertia tensor
+
+	};
+
 	std::unique_ptr<Mesh> m_Sphere;
 	std::unique_ptr<Mesh> m_Tet;
 	bool m_NormalVisualizationFlag = false;
 
 	TestPhysics::TestPhysics() : 
-		m_Proj(glm::perspective(glm::radians(45.0f), 3.0f / 4.0f, 0.1f, 100.0f)),
-		m_View(glm::translate(glm::mat4(1.0f), glm::vec3(5.0f, 5.0f, 5.0f))),
-		m_Translation(0.0f, 0.0f, 0.0f), m_LightPosition(3.0f, 5.0f, 0.0f) {
+		m_Proj(glm::perspective(glm::radians(45.0f), 3.0f / 4.0f, -10.0f, 100.0f)),
+		m_View(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 5.0f, 0.0f))),
+		m_Translation(0.0f, 0.0f, 0.0f), m_LightPosition(0.0f, 2.0f, 0.0f) {
 
 		GLint m_viewport[4];
 		GLCall(glGetIntegerv(GL_VIEWPORT, m_viewport));
@@ -54,13 +70,16 @@ namespace Test {
 		glm::vec3 A1 = glm::vec3(0.0, 0.0, 0.0);
 		glm::vec3 A2 = glm::vec3(1.0, 0.0, 0.0);
 		glm::vec3 A3 = glm::vec3(0.0, 1.0, 0.0);
-		glm::vec3 A4 = glm::vec3(0.0, 0.0, 1.0);*/
-		m_Mesh = (std::unique_ptr<Mesh>)Mesh::Tetrahedron(1, A1, A2, A3, A4);
-		//MassProperties mp(*m_Tet);
+		glm::vec3 A4 = glm::vec3(0.0, 0.0, 1.0);
+		*/
+
+		m_Mesh = (std::shared_ptr<Mesh>)Mesh::Tetrahedron(1, A1, A2, A3, A4);
+		RigidBody rb(m_Mesh, 1.0);
 
 		// Load shaders for the scene
-		m_BasicShader = std::make_unique<Shader>("res/shaders/BasicInstanced.shader");		
-		m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualizationInstanced.shader");
+		m_BasicShader = std::make_unique<Shader>("res/shaders/BasicLightingInstanced.shader");	
+		
+		m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualizationFaceInstanced.shader");
 
 
 	}
@@ -106,6 +125,8 @@ namespace Test {
 			m_BasicShader->SetUniformMat4f("u_Proj", m_Proj);
 			m_BasicShader->SetUniformMat4f("u_View", m_View);
 			m_BasicShader->SetUniform1i("u_Texture", 0);
+			m_BasicShader->SetUniform3f("u_LightPosition", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
+			m_BasicShader->SetUniform3f("u_LightColor", 0.6f, 0.6f, 0.6f);
 			m_Texture->Bind(0);
 			m_Mesh->Draw(*m_BasicShader);
 			
@@ -125,6 +146,7 @@ namespace Test {
 
 	void TestPhysics::OnImGuiRender() {
 		ImGui::Checkbox("normal visualization", &m_NormalVisualizationFlag);
+		ImGui::SliderFloat3("light_position", &m_LightPosition.x, -30.0f, 30.0f);
 	}
 
 	void TestPhysics::RenderScene() {

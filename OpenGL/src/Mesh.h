@@ -34,6 +34,14 @@ public:
 	std::vector<glm::mat4> m_InstanceMVPMatrices;
 	std::vector<glm::mat4> m_InstanceModelMatrices;
 
+	/* Structure data */
+	struct Face {
+		glm::vec3 p0, p1, p2, normal;
+		int i0, i1, i2;
+		float offset;
+		std::vector<Face*> neighbours;
+		std::vector<glm::vec3> verts;
+	};
 
 	/*  Functions  */
 	Mesh(unsigned int numInstances) : m_NumInstances(numInstances) {}
@@ -43,6 +51,8 @@ public:
 	void Draw(const Shader& shader);
 	void SetColor(float r, float g, float b, float a) { m_Color.x = r; m_Color.y = g; m_Color.z = b; m_Color.w = a; }
 	glm::vec4 GetColor() { return m_Color; }
+	Face& GetFace(int faceIndex) { return m_Faces[faceIndex]; }
+	int GetNumFaces() { return m_Faces.size(); }
 
 	std::vector<float>& GetPositions() { return m_Positions; }
 	std::vector<unsigned int>& GetIndices() { return m_VertexIndices; }
@@ -110,9 +120,23 @@ public:
 
 		tet->m_VertexIndices.insert(tet->m_VertexIndices.end(), { 
 			0, 1, 2,
-			3, 4, 5,
+			3, 5, 4,
 			6, 7, 8,
 			9, 10, 11});
+
+		tet->m_Normals.clear();
+		for (int i = 0; i < tet->m_VertexIndices.size() / 3; i++) {
+			int i0 = tet->m_VertexIndices[i * 3];
+			int i1 = tet->m_VertexIndices[i * 3 + 1];
+			int i2 = tet->m_VertexIndices[i * 3 + 2];
+
+			glm::vec3 p0 = glm::vec3(tet->m_Positions[i0*3], tet->m_Positions[i0 *3 + 1], tet->m_Positions[i0* 3 + 2]);
+			glm::vec3 p1 = glm::vec3(tet->m_Positions[i1 * 3], tet->m_Positions[i1 * 3 + 1], tet->m_Positions[i1 * 3 + 2]);
+			glm::vec3 p2 = glm::vec3(tet->m_Positions[i2 * 3], tet->m_Positions[i2 * 3 + 1], tet->m_Positions[i2 * 3 + 2]);
+
+			glm::vec3 n0 = glm::normalize(glm::cross(p2 - p0, p1 - p0));
+			tet->m_Normals.insert(tet->m_Normals.end(), { n0.x, n0.y, n0.z, n0.x, n0.y, n0.z, n0.x, n0.y, n0.z });
+		};
 
 		tet->SetupMesh();
 
@@ -253,12 +277,8 @@ public:
 		return sphere;
 	}
 private:
-	struct Triangle {
-		glm::vec3 p0, p1, p2, normal;
-		int i0, i1, i2;
-		std::vector<Triangle*> neighbours;
-	};
-	std::vector<Triangle> m_Faces;
+	
+	std::vector<Face> m_Faces;
 
 	//  Mesh Data 
 	unsigned int m_Dimensions = 0;
@@ -298,6 +318,7 @@ private:
 	/*  Functions */
 	void ParseMeshFile(const std::string& filepath);
 	void SetupMesh();
+	void CreateFaces();
 	void FixWinding();
 };
 

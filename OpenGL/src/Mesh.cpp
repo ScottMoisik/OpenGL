@@ -52,8 +52,13 @@ void Mesh::Draw(const Shader& shader) {
 
 /* Uses the structure of arrays approach (one array for each attribute type) */
 void Mesh::SetupMesh() {
+	// Create face structure for the mesh
+	CreateFaces();
+
 	// Ensure that the winding order is correct 
 	FixWinding();
+
+	
 
 	/* Setup vertex array object */
 	m_VAO = std::make_unique<VertexArray>();
@@ -113,10 +118,9 @@ void Mesh::SetupMesh() {
 
 
 
-
-void Mesh::FixWinding() {
+void Mesh::CreateFaces() {
 	using namespace glm;
-	
+
 	// Create faces
 	int numFaces = m_VertexIndices.size() / 3;
 	for (int fIdx = 0; fIdx < numFaces; fIdx++) {
@@ -128,16 +132,19 @@ void Mesh::FixWinding() {
 		vec3 p2 = vec3(m_Positions[k * 3], m_Positions[k * 3 + 1], m_Positions[k * 3 + 2]);
 		vec3 normal = normalize(cross(p1 - p0, p2 - p1));
 
-		Triangle tri = { p0, p1, p2, normal, i, j, k };
-		m_Faces.push_back(tri);
+		float offset = -normal.x * p0.x - normal.y * p0.y - normal.z * p0.z;
+
+		Face f = { p0, p1, p2, normal, i, j, k, offset };
+		f.verts.insert(f.verts.begin(), { p0, p1, p2 }); //Add the positions to a vector for the purposes of inertia tensor computation (see InertiaTensor.h)
+		m_Faces.push_back(f);
 
 	}
 
 	// Determine connectivity of faces by using the positions (since indices may not necessarily be shared if separate vertices between adjacent faces are used for lighting purposes, as in the case of the cube)
-	for (Triangle& face1 : m_Faces) {
-		
+	for (Face& face1 : m_Faces) {
+
 		// Search through all faces and find all edge neighbours (vertex neighbours are ignored)
-		for (Triangle& face2 : m_Faces) {
+		for (Face& face2 : m_Faces) {
 			if (&face1 != &face2) {
 				int p0Match = (face1.p0 == face2.p0 || face1.p0 == face2.p1 || face1.p0 == face2.p2);
 				int p1Match = (face1.p1 == face2.p0 || face1.p1 == face2.p1 || face1.p1 == face2.p2);
@@ -154,16 +161,93 @@ void Mesh::FixWinding() {
 			}
 		}
 	}
+}
 
-	std::vector<int> correctedFaces;
+void Mesh::FixWinding() {
+	using namespace glm;
+	
+	
+	//Systematically search all faces and correct the winding using the first face as the standard
+	Face* face = &m_Faces[0];
+	std::vector<Face*> checkedFaces;
+	std::vector<Face*> searchFaces;
+	checkedFaces.push_back(face);
 
-	for (Triangle& face : m_Faces) {
-		//face.p0 
+	searchFaces.insert(searchFaces.end(), face->neighbours.begin(), face->neighbours.end());
+	Face* searchFace;
+
+	while (searchFaces.size() > 0) {
+		searchFace = searchFaces[0];
+
+		if (std::find(checkedFaces.begin(), checkedFaces.end(), searchFace) == checkedFaces.end()) {
+			int p0Match = (face->p0 == searchFace->p0) + 2 * (face->p0 == searchFace->p1) + 3 * (face->p0 == searchFace->p2);
+			int p1Match = (face->p1 == searchFace->p0) + 2 * (face->p1 == searchFace->p1) + 3 * (face->p1 == searchFace->p2);
+			int p2Match = (face->p2 == searchFace->p0) + 2 * (face->p2 == searchFace->p1) + 3 * (face->p2 == searchFace->p2);
+
+			int first = 0;
+			int second = 0;
+
+			if (p0Match > 0 && p1Match > 0) {
+				//0-1 edge
+				first = p0Match;
+				second = p1Match;
+			} else if (p1Match > 0 && p2Match > 0) {
+				//1-2 edge
+				first = p1Match;
+				second = p2Match;
+			} else {
+				//2-0 edge
+				first = p2Match;
+				second = p0Match;
+			}
+
+			//If any of these orderings occur, it means that the vertex winding is not consistent with the current face
+			if ((first == 2 && second == 3) || (first == 2 && second == 3) || (first == 1 && second == 2)) {
+				//Correct the winding by swapping the ordering of the first two vertices (any pair will do) in the search face
+				int tempIndex = searchFace->i0;
+				searchFace->i0 = searchFace->i1;
+				searchFace->i1 = tempIndex;
+
+				//glm::vec3 tempPos = searchFace->p0;
+				//searchFace->p0 = searchFace->p1;
+				//searchFace->p1 = tempPos;
+
+				searchFace->normal = glm::normalize(glm::cross(searchFace->p1 - searchFace->p0, searchFace->p2 - searchFace->p0));
+			}
+
+			//Add the search face to the list of checked faces
+			checkedFaces.push_back(searchFace);
+
+			//Add the search faces neighbours to the list of search faces (if the neighbour is not already in the list)
+			for (Face* neighbour : searchFace->neighbours) {
+				bool checkedFlag = (std::find(checkedFaces.begin(), checkedFaces.end(), neighbour) == checkedFaces.end());
+				bool searchFlag = (std::find(searchFaces.begin(), searchFaces.end(), neighbour) == searchFaces.end());
+				if (checkedFlag && searchFlag) {
+					searchFaces.push_back(neighbour);
+				}
+			}
+
+			ptrdiff_t pos = std::find(searchFaces.begin(), searchFaces.end(), searchFace) - searchFaces.begin();
+			if (pos < searchFaces.size()) {
+				searchFaces.erase(searchFaces.begin() + pos);
+			}
+		}
 	}
 
-	//
+	//Replace vertex indices and normals in the mesh data structure
+	for (int fIdx = 0; fIdx < m_Faces.size(); fIdx++) {
+		m_VertexIndices[fIdx * 3] = m_Faces[fIdx].i0;
+		m_VertexIndices[fIdx * 3 + 1] = m_Faces[fIdx].i1;
+		m_VertexIndices[fIdx * 3 + 2] = m_Faces[fIdx].i2;
 
-
+		for (int nIdx = 0; nIdx < 3; nIdx++) {
+			int j = m_VertexIndices[(fIdx * 3) + nIdx];
+			m_Normals[j * 3] = m_Faces[fIdx].normal.x;
+			m_Normals[j * 3 + 1] = m_Faces[fIdx].normal.y;
+			m_Normals[j * 3 + 2] = m_Faces[fIdx].normal.z;
+		}
+	}
+	
 	int ththt = 1;
 }
 

@@ -107,12 +107,14 @@
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
     <None Include="res\shaders\BasicInstanced.shader" />
+    <None Include="res\shaders\BasicLightingInstanced.shader" />
     <None Include="res\shaders\BasicMesh.shader" />
     <None Include="res\shaders\BasicMeshInstanced.shader" />
     <None Include="res\shaders\ColorOnly.shader" />
     <None Include="res\shaders\DebugQuad.shader" />
     <None Include="res\shaders\NormalMapMeshInstanced.shader" />
     <None Include="res\shaders\NormalVisualization.shader" />
+    <None Include="res\shaders\NormalVisualizationFaceInstanced.shader" />
     <None Include="res\shaders\NormalVisualizationInstanced.shader" />
     <None Include="res\shaders\ParallaxMappingInstanced.shader" />
     <None Include="res\shaders\Particle.shader" />

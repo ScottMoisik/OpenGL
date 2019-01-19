@@ -14,6 +14,8 @@ out VS_OUT{
 uniform mat4 u_Proj;
 uniform mat4 u_View;
 
+
+
 void main() {
 	gl_Position = u_Proj * u_View * instanceModel * rotModel * vec4(position, 1.0);
 	mat3 normalMatrix = mat3(transpose(inverse(instanceModel * rotModel)));
@@ -30,6 +32,7 @@ in VS_OUT{
 } gs_in[];
 
 const float MAGNITUDE = 0.4;
+
 
 void GenerateLine(int index) {
 	gl_Position = gl_in[index].gl_Position;

@@ -95,10 +95,53 @@
 
 		}
 
+		//Create triangle strip based arrow
+		static Mesh* Arrow(unsigned int numInstances) {
+			using namespace glm;
+			Mesh* arrow = new Mesh(numInstances);
+			const float PI = 3.14159265358979323846f;  // pi;
+			const float PI6 = PI / 6.0f;
+			const float PI3 = PI / 3.0f;
+			const float PI23 = 3.0f * (PI / 2.0f);
+			const float arrowHeadTip = 1.0f;
+			const float arrowHeadBase = 0.8f;
+			const float headScale = 0.5;
+			const float shaftScale = 0.5;
+
+			//Arrow head
+			arrow->m_Positions.insert(arrow->m_Positions.begin(), {
+				arrowHeadTip,	0.0f,						0.0f,						//arrow tip
+				arrowHeadBase,	headScale*sin(PI6),			headScale*cos(PI6),			//arrow head base, upper right
+				arrowHeadBase,	headScale*sin(PI6 + PI3),	headScale*cos(PI6 + PI3),	//arrow head base, upper left
+				arrowHeadBase,	headScale*sin(PI23),		headScale*cos(PI23)			//arrow head base, bottom
+				});
+
+			//Arrow shaft lambda
+			auto buildArrowLambda = [&arrow, &arrowHeadBase, &shaftScale](float theta) {
+				arrow->m_Positions.insert(arrow->m_Positions.begin(), {
+					arrowHeadBase,	shaftScale*sin(theta),		shaftScale*cos(theta),		//arrow shaft tip
+					0.0f,			shaftScale*sin(theta),		shaftScale*cos(theta),		//arrow shaft base
+					});
+			};
+
+			buildArrowLambda(PI6);
+			buildArrowLambda(PI6 + PI3);
+			buildArrowLambda(PI23);
+
+			arrow->m_VertexIndices.insert(arrow->m_VertexIndices.end(), {
+				//Begin arrow head
+				0, 1, 2,	0, 2, 3,	0, 3, 1, 
+				//Begin arrow shaft
+				4, 5, 6,	6, 7, 4,
+				7, 6, 9,	9, 8, 7,
+				8, 9, 10,	10, 11, 8});
+
+			arrow->SetupMesh();
+
+			return arrow;
+		}
 
 		//Winding order checking algorithm: http://www.dillonbhuff.com/?p=30
-
-		/* Factory functions */
 		static Mesh* Tetrahedron(unsigned int numInstances, glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 v3) {
 			Mesh* tet = new Mesh(numInstances);
 

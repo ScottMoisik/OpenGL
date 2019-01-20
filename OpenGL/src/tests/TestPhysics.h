@@ -23,7 +23,7 @@ namespace Test {
 	private:
 		glm::vec3 m_Translation, m_LightPosition;
 		float m_Rotation;
-		std::shared_ptr<Mesh> m_Mesh;
+		std::shared_ptr<Mesh> m_Mesh, m_Arrow;
 		std::unique_ptr<VertexArray> m_VAO;
 		std::unique_ptr<VertexBuffer> m_VertexBuffer;
 		std::unique_ptr<IndexBuffer> m_IndexBuffer;

@@ -25,11 +25,11 @@ uniform mat4 u_ProjView;
 void main() {
 	float PI = 3.14159265358979323846f;  // pi;
 	float PI6 = PI / 6.0f;
-	float PI3 = PI / 3.0f;
+	float PI3 = (2.0 * PI) / 3.0f;
 	float PI23 = 3.0f * (PI / 2.0f);
-	float arrowHeadBase = 0.8f;
-	float headScale = 0.5;
-	float shaftScale = 0.5;
+	float arrowHeadBase = 0.25f;
+	float headScale = 0.1;
+	float shaftScale = 0.05;
 	float oneThird = 1.0f / 3.0f;
 
 	vec3 a = vec3(gl_in[1].gl_Position) - vec3(gl_in[0].gl_Position);
@@ -53,8 +53,9 @@ void main() {
 
 	vec4 center = (gl_in[0].gl_Position + gl_in[1].gl_Position + gl_in[2].gl_Position) * oneThird;
 	
+	
 	//arrow head point 0 (base)
-	vec4 arrowHeadBaseVec = u_ProjView * vec4(1.0, 0.0, 0.0, 0.0);//vec4(R * vec3(arrowHeadBase, headScale*sin(PI6), headScale*cos(PI6)), 0.0f);
+	vec4 arrowHeadBaseVec = u_ProjView * (center + vec4(R * vec3(arrowHeadBase, headScale*sin(PI6), headScale*cos(PI6)), 0.0f));
 	gl_Position = arrowHeadBaseVec;
 	EmitVertex();
 
@@ -64,11 +65,11 @@ void main() {
 	EmitVertex();
 
 	//arrow head point 2 (base)
-	gl_Position = u_ProjView * vec4(1.0, 0.0, 0.0, 0.0);//vec4(R * vec3(arrowHeadBase, headScale*sin(PI6 + PI3), headScale*cos(PI6 + PI3)), 0.0f);
+	gl_Position = u_ProjView * (center + vec4(R * vec3(arrowHeadBase, headScale*sin(PI6 + PI3), headScale*cos(PI6 + PI3)), 0.0f));
 	EmitVertex();
 
 	//arrow head point 3 (base)
-	gl_Position = arrowHeadTip;//u_ProjView * vec4(R * vec3(arrowHeadBase, headScale*sin(PI23), headScale*cos(PI23)), 0.0f);
+	gl_Position = u_ProjView * (center + vec4(R * vec3(arrowHeadBase, headScale*sin(PI23), headScale*cos(PI23)), 0.0f));
 	EmitVertex();
 
 	//arrow head point 4 (base)
@@ -79,33 +80,33 @@ void main() {
 	gl_Position = arrowHeadTip;
 	EmitVertex();
 	EndPrimitive();
+	
 
-
-	/*
+	
 	//arrow head shaft 0 (bottom)
-	vec4 arrowShaftBottom = u_ProjView * vec4(R * vec3(arrowHeadBase, headScale*sin(PI6), headScale*cos(PI6)), 0.0f);
+	vec4 arrowShaftBottom = u_ProjView * (center + vec4(R * vec3(0.0, shaftScale*sin(PI6), shaftScale*cos(PI6)), 0.0f));
 	gl_Position = arrowShaftBottom;
 	EmitVertex();
 
 	//arrow head shaft 1 (top)
-	vec4 arrowShaftTop = u_ProjView * vec4(R * vec3(arrowHeadBase, headScale*sin(PI6), headScale*cos(PI6)), 0.0f);
+	vec4 arrowShaftTop = u_ProjView * (center + vec4(R * vec3(arrowHeadBase, shaftScale*sin(PI6), shaftScale*cos(PI6)), 0.0f));
 	gl_Position = arrowShaftTop;
 	EmitVertex();
 
 	//arrow head shaft 2 (bottom)
-	gl_Position = u_ProjView * vec4(R * vec3(arrowHeadBase, headScale*sin(PI6 + PI3), headScale*cos(PI6 + PI3)), 0.0f);
+	gl_Position = u_ProjView * (center + vec4(R * vec3(0.0, shaftScale*sin(PI6 + PI3), shaftScale*cos(PI6 + PI3)), 0.0f));
 	EmitVertex();
 
 	//arrow head shaft 3 (top)
-	gl_Position = u_ProjView * vec4(R * vec3(arrowHeadBase, headScale*sin(PI6 + PI3), headScale*cos(PI6 + PI3)), 0.0f);
+	gl_Position = u_ProjView * (center + vec4(R * vec3(arrowHeadBase, shaftScale*sin(PI6 + PI3), shaftScale*cos(PI6 + PI3)), 0.0f));
 	EmitVertex();
 
 	//arrow head shaft 4 (bottom)
-	gl_Position = u_ProjView * vec4(R * vec3(arrowHeadBase, headScale*sin(PI23), headScale*cos(PI23)), 0.0f);
+	gl_Position = u_ProjView * (center + vec4(R * vec3(0.0, shaftScale*sin(PI23), shaftScale*cos(PI23)), 0.0f));
 	EmitVertex();
 
 	//arrow head shaft 5 (top)
-	gl_Position = u_ProjView * vec4(R * vec3(arrowHeadBase, headScale*sin(PI23), headScale*cos(PI23)), 0.0f);
+	gl_Position = u_ProjView * (center + vec4(R * vec3(arrowHeadBase, shaftScale*sin(PI23), shaftScale*cos(PI23)), 0.0f));
 	EmitVertex();
 
 	//arrow head shaft 7 (bottom)
@@ -117,7 +118,7 @@ void main() {
 	EmitVertex();
 
 	EndPrimitive();
-	*/
+	
 };
 
 #shader fragment
@@ -126,5 +127,5 @@ void main() {
 out vec4 FragColor;
 
 void main() {
-	FragColor = vec4(1.0, 0.0, 0.2, 1.0);
+	FragColor = vec4(0.7, 0.0, 0.05, 1.0);
 };

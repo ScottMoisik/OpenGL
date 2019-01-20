@@ -54,7 +54,7 @@ namespace Test {
 		GLCall(glEnable(GL_DEPTH_TEST));
 
 		//Load meshes
-		m_Arrow = (std::shared_ptr<Mesh>)Mesh::Arrow(4);
+		//m_Arrow = (std::shared_ptr<Mesh>)Mesh::Arrow(4);
 		
 		//m_Mesh = (std::unique_ptr<Mesh>)Mesh::Plane(1);
 		//m_Mesh->SetColor(0.2f, 0.2f, 0.6f, 1.0f);
@@ -81,8 +81,10 @@ namespace Test {
 		// Load shaders for the scene
 		m_BasicShader = std::make_unique<Shader>("res/shaders/BasicLightingInstanced.shader");	
 		
-		m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualizationFaceInstanced.shader");
+		//m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualizationFaceInstanced.shader");
 
+		m_NormalVisualizingShader = std::make_unique<Shader>("res/shaders/NormalVisualizationFace3dArrowInstanced.shader");
+		
 
 	}
 
@@ -135,8 +137,7 @@ namespace Test {
 			if (m_NormalVisualizationFlag) {
 				/* Set uniforms for the normal visualizing shader */
 				m_NormalVisualizingShader->Bind();
-				m_NormalVisualizingShader->SetUniformMat4f("u_Proj", m_Proj);
-				m_NormalVisualizingShader->SetUniformMat4f("u_View", m_View);
+				m_NormalVisualizingShader->SetUniformMat4f("u_ProjView", m_Proj * m_View);
 
 				/* Do draw call for normal visualizing shader*/
 				m_Mesh->Draw(*m_NormalVisualizingShader);

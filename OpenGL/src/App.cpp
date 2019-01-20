@@ -73,7 +73,7 @@ int main(void) {
 	}
 
 	/* Get the monitor dpi */
-	int count;
+	//int count;
 	GLFWmonitor* primary = glfwGetPrimaryMonitor();
 	int widthMM, heightMM;
 	const GLFWvidmode* mode = glfwGetVideoMode(primary);
@@ -81,7 +81,7 @@ int main(void) {
 	const double dpi = mode->width / (widthMM / 25.4);
 
 	/* Set callbacks for input to control camera */
-	camera = Camera(windowWidth, windowHeight, glm::vec3(0.0f, 10.0f, 15.0f));
+	camera = Camera((float)windowWidth, (float)windowHeight, glm::vec3(0.0f, 10.0f, 15.0f));
 	lastX = windowWidth / 2.0f;
 	lastY = windowHeight / 2.0f;
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -112,10 +112,10 @@ int main(void) {
 
 		ImGui::StyleColorsDark();
 		ImGuiStyle& style = ImGui::GetStyle();
-		style.ScaleAllSizes(dpi/BASE_DPI);
+		style.ScaleAllSizes((float)dpi/BASE_DPI);
 
 		ImGuiIO& io = ImGui::GetIO();
-		io.FontGlobalScale = dpi / BASE_DPI;
+		io.FontGlobalScale = (float)dpi / BASE_DPI;
 
 		Test::Test* currentTest = NULL;
 		Test::TestMenu* testMenu = new Test::TestMenu(currentTest);
@@ -130,7 +130,7 @@ int main(void) {
 
 
 		while (!glfwWindowShouldClose(window)) {
-			float currentTime = glfwGetTime();
+			float currentTime = (float)glfwGetTime();
 			deltaTime = currentTime - lastTime;
 			lastTime = currentTime;
 
@@ -220,18 +220,20 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 /* glfw: whenever the mouse moves, this callback is called */
 void mouse_move_callback(GLFWwindow* window, double xpos, double ypos) {
+	float xposF = (float)xpos;
+	float yposF = (float)ypos;
 	if (mouseClickFlag) {
 		if (firstMouse) {
-			lastX = xpos;
-			lastY = ypos;
+			lastX = xposF;
+			lastY = yposF;
 			firstMouse = false;
 		}
 
-		float xoffset = xpos - lastX;
-		float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+		float xoffset = xposF - lastX;
+		float yoffset = lastY - yposF; // reversed since y-coordinates go from bottom to top
 
-		lastX = xpos;
-		lastY = ypos;
+		lastX = xposF;
+		lastY = yposF;
 
 		camera.ProcessMouseMovement(xoffset, yoffset);
 	}
@@ -239,5 +241,5 @@ void mouse_move_callback(GLFWwindow* window, double xpos, double ypos) {
 
 /* glfw: whenever the mouse scroll wheel scrolls, this callback is called */
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	camera.ProcessMouseScroll(yoffset);
+	camera.ProcessMouseScroll((float)yoffset);
 }

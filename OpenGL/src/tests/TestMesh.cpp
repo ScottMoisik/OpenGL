@@ -211,7 +211,7 @@ namespace Test {
 			m_Shader->SetUniformMat4f("u_LightSpaceMatrix", lightSpaceMatrix);
 			m_Shader->SetUniform3f("u_ViewPos", m_Camera->Position.x, m_Camera->Position.y, m_Camera->Position.z);
 			m_Shader->SetUniform3f("u_LightPosition", m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
-			m_Shader->SetUniform4f("u_ObjectColor", 0.5, 0.1, 0.1, 1.0f);
+			m_Shader->SetUniform4f("u_ObjectColor", 0.5f, 0.1f, 0.1f, 1.0f);
 			//m_Shader->SetUniform1b("u_UseTexturing", true);
 
 			m_Texture->Bind(1);

@@ -97,13 +97,13 @@ class InertiaTensor {
 	static int C;   /* gamma */
 
 	/* projection integrals */
-	static double P1, Pa, Pb, Paa, Pab, Pbb, Paaa, Paab, Pabb, Pbbb;
+	static float P1, Pa, Pb, Paa, Pab, Pbb, Paaa, Paab, Pabb, Pbbb;
 
 	/* face integrals */
-	static double Fa, Fb, Fc, Faa, Fbb, Fcc, Faaa, Fbbb, Fccc, Faab, Fbbc, Fcca;
+	static float Fa, Fb, Fc, Faa, Fbb, Fcc, Faaa, Fbbb, Fccc, Faab, Fbbc, Fcca;
 
 	/* volume integrals */
-	static double T0, T1[3], T2[3], TP[3];
+	static float T0, T1[3], T2[3], TP[3];
 
 
 	/*

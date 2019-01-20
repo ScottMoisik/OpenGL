@@ -227,14 +227,14 @@ void Mesh::FixWinding() {
 			}
 
 			ptrdiff_t pos = std::find(searchFaces.begin(), searchFaces.end(), searchFace) - searchFaces.begin();
-			if (pos < searchFaces.size()) {
+			if (pos < (ptrdiff_t)searchFaces.size()) {
 				searchFaces.erase(searchFaces.begin() + pos);
 			}
 		}
 	}
 
 	//Replace vertex indices and normals in the mesh data structure
-	for (int fIdx = 0; fIdx < m_Faces.size(); fIdx++) {
+	for (int fIdx = 0; fIdx < (int)m_Faces.size(); fIdx++) {
 		m_VertexIndices[fIdx * 3] = m_Faces[fIdx].i0;
 		m_VertexIndices[fIdx * 3 + 1] = m_Faces[fIdx].i1;
 		m_VertexIndices[fIdx * 3 + 2] = m_Faces[fIdx].i2;
@@ -362,7 +362,7 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 
 
 	/* Map position and normal indices based on the face data */
-	for (int i = 0; i < m_VertexIndices.size(); i++) {
+	for (int i = 0; i < (int)m_VertexIndices.size(); i++) {
 		if (m_VertexIndexMap_PositionNormal.find(m_VertexIndices[i]) == m_VertexIndexMap_PositionNormal.end()) {
 			m_VertexIndexMap_PositionNormal[m_VertexIndices[i]] = m_NormalIndices[i];
 		}
@@ -378,13 +378,13 @@ void Mesh::ParseMeshFile(const std::string& filepath) {
 
 	/* Store everything in the same order */
 
-	for (int i = 0; i < m_VertexIndexMap_PositionNormal.size(); i++) {
+	for (int i = 0; i < (int)m_VertexIndexMap_PositionNormal.size(); i++) {
 		int j = m_VertexIndexMap_PositionNormal[i] * 3;
 		m_Normals.push_back(normalsTemp[j]);
 		m_Normals.push_back(normalsTemp[j + 1]);
 		m_Normals.push_back(normalsTemp[j + 2]);
 	}
-	for (int i = 0; i < m_VertexIndexMap_PositionTexture.size(); i++) {
+	for (int i = 0; i < (int)m_VertexIndexMap_PositionTexture.size(); i++) {
 		int j = m_VertexIndexMap_PositionTexture[i] * 2;
 		m_TextureCoordinates.push_back(texCoordTemp[j]);
 		m_TextureCoordinates.push_back(texCoordTemp[j + 1]);

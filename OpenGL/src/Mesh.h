@@ -122,12 +122,12 @@
 
 			tet->m_VertexIndices.insert(tet->m_VertexIndices.end(), {
 				0, 1, 2,
-				3, 5, 4,
+				3, 4, 5,
 				6, 7, 8,
 				9, 10, 11 });
 
 			tet->m_Normals.clear();
-			for (int i = 0; i < tet->m_VertexIndices.size() / 3; i++) {
+			for (int i = 0; i < (int)tet->m_VertexIndices.size() / 3; i++) {
 				int i0 = tet->m_VertexIndices[i * 3];
 				int i1 = tet->m_VertexIndices[i * 3 + 1];
 				int i2 = tet->m_VertexIndices[i * 3 + 2];
@@ -204,7 +204,8 @@
 			Mesh* sphere = new Mesh(numInstances);
 			const float PI = 3.14159265358979323846f  /* pi */;
 			float sd = (float)sphereDivisions;
-			int numRings = (sd / 2) - 1; //Includes equator, excludes top and bottom points
+			unsigned int sphereDiv = (unsigned int)sphereDivisions;
+			int numRings = (sphereDivisions / 2) - 1; //Includes equator, excludes top and bottom points
 			float radRingDivs = (2.0f * PI) / sd;
 			float radRingDivStart = (PI / 2) - radRingDivs; //We start at the top inner most ring and work down (but we just need values from the left half of the sphere)
 
@@ -224,23 +225,23 @@
 			sphere->m_Positions.insert(sphere->m_Positions.end(), { 0.0f, -1.0f, 0.0f });
 
 			/* Indices for sphere top */
-			for (unsigned int sIdx = 0; sIdx < sphereDivisions + 1; sIdx++) {
+			for (unsigned int sIdx = 0; sIdx < sphereDiv + 1; sIdx++) {
 				unsigned int thirdIndex = sIdx + 2;
-				sphere->m_VertexIndices.insert(sphere->m_VertexIndices.end(), { 0, sIdx + 1, (thirdIndex > sphereDivisions ? 1 : thirdIndex) });
+				sphere->m_VertexIndices.insert(sphere->m_VertexIndices.end(), { 0, sIdx + 1, (thirdIndex > sphereDiv ? 1 : thirdIndex) });
 			}
 
 			/* Indices for inner sphere rings */
 			for (int rIdx = 1; rIdx < numRings; rIdx++) {
-				unsigned int currentBaseIndex = rIdx * sphereDivisions;
-				unsigned int currentPeakIndex = currentBaseIndex + sphereDivisions;
-				for (unsigned int sIdx = 1; sIdx < sphereDivisions + 1; sIdx++) {
-					unsigned int bIdx = sIdx + ((rIdx - 1) * sphereDivisions);
+				unsigned int currentBaseIndex = rIdx * sphereDiv;
+				unsigned int currentPeakIndex = currentBaseIndex + sphereDiv;
+				for (unsigned int sIdx = 1; sIdx < sphereDiv + 1; sIdx++) {
+					unsigned int bIdx = sIdx + ((rIdx - 1) * sphereDiv);
 
 					unsigned int lowIndex = bIdx + 1;
-					unsigned int highIndex = bIdx + sphereDivisions + 1;
+					unsigned int highIndex = bIdx + sphereDiv + 1;
 					unsigned int sharedIndex = (highIndex > currentPeakIndex ? currentBaseIndex + 1 : highIndex);
 
-					if (lowIndex > currentBaseIndex) { lowIndex = (currentBaseIndex - sphereDivisions) + 1; }
+					if (lowIndex > currentBaseIndex) { lowIndex = (currentBaseIndex - sphereDiv) + 1; }
 
 					/* Bottom triangle */
 					sphere->m_VertexIndices.insert(sphere->m_VertexIndices.end(),

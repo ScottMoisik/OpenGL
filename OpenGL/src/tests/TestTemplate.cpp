@@ -61,7 +61,7 @@ namespace Test {
 		{
 			using namespace glm;
 
-			glm::mat4 lightProjection, lightView, lightSpaceMatrix;
+			glm::mat4 lightProjection;// , lightView, lightSpaceMatrix;
 			float near_plane = -10.0f, far_plane = 10.0f;
 			if (projType == ORTHO) {
 				float range = 50.0;

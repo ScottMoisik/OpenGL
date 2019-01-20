@@ -80,26 +80,26 @@ int InertiaTensor::B;   /* beta */
 int InertiaTensor::C;   /* gamma */
 
 /* projection integrals */
-double InertiaTensor::P1, InertiaTensor::Pa, InertiaTensor::Pb, 
+float InertiaTensor::P1, InertiaTensor::Pa, InertiaTensor::Pb, 
 InertiaTensor::Paa, InertiaTensor::Pab, InertiaTensor::Pbb, 
 InertiaTensor::Paaa, InertiaTensor::Paab, InertiaTensor::Pabb, InertiaTensor::Pbbb;
 
 /* face integrals */
-double InertiaTensor::Fa, InertiaTensor::Fb, InertiaTensor::Fc,
+float InertiaTensor::Fa, InertiaTensor::Fb, InertiaTensor::Fc,
 InertiaTensor::Faa, InertiaTensor::Fbb, InertiaTensor::Fcc,
 InertiaTensor::Faaa, InertiaTensor::Fbbb, InertiaTensor::Fccc, InertiaTensor::Faab, InertiaTensor::Fbbc, InertiaTensor::Fcca;
 
 /* volume integrals */
-double InertiaTensor::T0, InertiaTensor::T1[3], InertiaTensor::T2[3], InertiaTensor::TP[3];
+float InertiaTensor::T0, InertiaTensor::T1[3], InertiaTensor::T2[3], InertiaTensor::TP[3];
 
 /* compute various integrations over projection of face */
 void InertiaTensor::compProjectionIntegrals(Face * f) {
-	double a0, a1, da;
-	double b0, b1, db;
-	double a0_2, a0_3, a0_4, b0_2, b0_3, b0_4;
-	double a1_2, a1_3, b1_2, b1_3;
-	double C1, Ca, Caa, Caaa, Cb, Cbb, Cbbb;
-	double Cab, Kab, Caab, Kaab, Cabb, Kabb;
+	float a0, a1, da;
+	float b0, b1, db;
+	float a0_2, a0_3, a0_4, b0_2, b0_3, b0_4;
+	float a1_2, a1_3, b1_2, b1_3;
+	float C1, Ca, Caa, Caaa, Cb, Cbb, Cbbb;
+	float Cab, Kab, Caab, Kaab, Cabb, Kabb;
 	int i;
 
 	P1 = Pa = Pb = Paa = Pab = Pbb = Paaa = Paab = Pabb = Pbbb = 0.0;
@@ -191,7 +191,7 @@ void InertiaTensor::compFaceIntegrals(Face *f) {
 
 void InertiaTensor::compVolumeIntegrals(std::shared_ptr<Mesh> mesh) {
 	Face *f;
-	double nx, ny, nz;
+	float nx, ny, nz;
 	int i;
 
 	T0 = T1[X] = T1[Y] = T1[Z]

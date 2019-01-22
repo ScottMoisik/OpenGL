@@ -1,13 +1,64 @@
 #pragma once
+
+//#include <Eigen/Core>
+#include <Eigen/Dense>
+//#include <Eigen/SVD>
+
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/matrix_access.hpp"
 
 #include "Mesh.h"
 
-#define EPS 1.0e-10
+#include <vector>
+#include <limits>
 
-using namespace glm;
+
+#define EPS 1.0e-10
+#define MIN_VAL -FLT_MAX
+#define MAX_VAL FLT_MAX
+
+using namespace glm; 
+using namespace Eigen;
+
+class Geometry {
+public: 
+	static void ComputeSpatialProperties(std::vector<float>* verts) {
+		const int numVerts = ((int)verts->size()) / 3;
+		vec3 minPoint(MIN_VAL, MIN_VAL, MIN_VAL);
+		vec3 maxPoint(MAX_VAL, MAX_VAL, MAX_VAL);
+		vec3 centroid(0.0f);
+				
+		MatrixXf A(numVerts, 3);
+
+		for (int i = 0; i < numVerts; i++) {
+
+			float x = (*verts)[i * 3];
+			float y = (*verts)[i * 3 + 1];
+			float z = (*verts)[i * 3 + 2];
+			if (x > minPoint.x) { minPoint.x = x; }
+			if (y > minPoint.y) { minPoint.y = y; }
+			if (z > minPoint.z) { minPoint.z = z; }
+
+			centroid.x += x;
+			centroid.y += y;
+			centroid.z += z;
+
+			A.row(i) << x, y, z;
+		}
+
+		int ti = 1;
+
+		
+
+
+
+	}
+
+
+};
+
+
 class Intersect {
 
 public:

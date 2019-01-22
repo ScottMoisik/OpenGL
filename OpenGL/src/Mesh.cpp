@@ -55,7 +55,7 @@ void Mesh::SetupMesh() {
 	CreateFaces();
 
 	// Ensure that the winding order is correct 
-	FixWinding();
+	//FixWinding();
 
 
 
@@ -129,7 +129,7 @@ void Mesh::CreateFaces() {
 		vec3 p0 = vec3(m_Positions[i * 3], m_Positions[i * 3 + 1], m_Positions[i * 3 + 2]);
 		vec3 p1 = vec3(m_Positions[j * 3], m_Positions[j * 3 + 1], m_Positions[j * 3 + 2]);
 		vec3 p2 = vec3(m_Positions[k * 3], m_Positions[k * 3 + 1], m_Positions[k * 3 + 2]);
-		vec3 normal = normalize(cross(p1 - p0, p2 - p1));
+		vec3 normal = normalize(cross(p1 - p0, p2 - p0));
 
 		float offset = -normal.x * p0.x - normal.y * p0.y - normal.z * p0.z;
 

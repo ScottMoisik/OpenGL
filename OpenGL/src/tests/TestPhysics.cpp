@@ -14,7 +14,7 @@
 
 //#include "physics/Inertia.h"
 #include "physics/InertiaTensor.h"
-//#include "physics/MassProperties.h"
+#include "geometry/Geometry.h"
 
 namespace Test {
 
@@ -60,14 +60,19 @@ namespace Test {
 		//m_Mesh->SetColor(0.2f, 0.2f, 0.6f, 1.0f);
 		m_Texture = std::make_unique<Texture>("res/textures/marble.jpg");
 
-		//m_Sphere = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SphereDivisions::res32, 1);
+		
 		//InertialProps ip = ComputeInertiaProperties(1.0f);// *m_Sphere, 2.0f);
 		//MassProperties mp(*m_Sphere);
 
+		//Tonon test case
+		/*
 		glm::vec3 A1 = glm::vec3(8.33220, -11.86875, 0.93355);
 		glm::vec3 A2 = glm::vec3(0.75523, 5.000000, 16.37072);
 		glm::vec3 A3 = glm::vec3(52.61236, 5.000000, -5.38580);
 		glm::vec3 A4 = glm::vec3(2.000000, 5.000000, 3.000000);
+		*/
+
+
 /*
 		glm::vec3 A1 = glm::vec3(0.0, 0.0, 0.0);
 		glm::vec3 A2 = glm::vec3(1.0, 0.0, 0.0);
@@ -75,7 +80,9 @@ namespace Test {
 		glm::vec3 A4 = glm::vec3(0.0, 0.0, 1.0);
 		*/
 
-		m_Mesh = (std::shared_ptr<Mesh>)Mesh::Tetrahedron(1, A1, A2, A3, A4);
+		m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SphereDivisions::res32, 1);
+		//Geometry::ComputeSpatialProperties(&m_Mesh->GetPositions());
+		//m_Mesh = (std::shared_ptr<Mesh>)Mesh::Tetrahedron(1, A1, A2, A3, A4);
 		RigidBody rb(m_Mesh, 1.0);
 
 		// Load shaders for the scene

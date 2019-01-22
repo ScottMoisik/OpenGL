@@ -81,7 +81,7 @@ namespace Test {
 		*/
 
 		m_Mesh = (std::unique_ptr<Mesh>)Mesh::Sphere(Mesh::SphereDivisions::res32, 1);
-		//Geometry::ComputeSpatialProperties(&m_Mesh->GetPositions());
+		ComputeSpatialProperties(&m_Mesh->GetPositions());
 		//m_Mesh = (std::shared_ptr<Mesh>)Mesh::Tetrahedron(1, A1, A2, A3, A4);
 		RigidBody rb(m_Mesh, 1.0);
 

@@ -55,7 +55,7 @@
 		glm::vec4 GetColor() { return m_Color; }
 		Face& GetFace(int faceIndex) { return m_Faces[faceIndex]; }
 		int GetNumFaces() { return m_Faces.size(); }
-
+		int GetNumVertices() { return (int) (m_Positions.size() / 3); }
 		std::vector<float>& GetPositions() { return m_Positions; }
 		std::vector<unsigned int>& GetIndices() { return m_VertexIndices; }
 

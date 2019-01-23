@@ -16,6 +16,8 @@
 #include "physics/InertiaTensor.h"
 #include "geometry/Geometry.h"
 
+#include "WindingNumber/UT_SolidAngle.h"
+
 namespace Test {
 
 	class RigidBody{
@@ -84,6 +86,30 @@ namespace Test {
 		ComputeSpatialProperties(&m_Mesh->GetPositions());
 		//m_Mesh = (std::shared_ptr<Mesh>)Mesh::Tetrahedron(1, A1, A2, A3, A4);
 		RigidBody rb(m_Mesh, 1.0);
+
+
+		{
+			int numFaces = m_Mesh->GetNumFaces();
+			int* tp = (int*) &m_Mesh->GetIndices()[0];
+			int numPoints = m_Mesh->GetNumVertices();
+			;
+
+			using namespace HDK_Sample;
+			UT_Vector3T<float> fv(m_Mesh->GetPositions()[0]);
+			
+
+			//UT_SolidAngle<float, float> solidAngle(numFaces, tp, numPoints, nullptr);
+			UT_SolidAngle<float, float>* solidAngle = new UT_SolidAngle<float, float>();
+
+			int iti = 1;
+			/*
+			const int ntriangles,
+				const int *const triangle_points,
+				const int npoints,
+				const UT_Vector3T<S> *const positions,
+				const int order = 2)
+				*/
+		}
 
 		// Load shaders for the scene
 		m_BasicShader = std::make_unique<Shader>("res/shaders/BasicLightingInstanced.shader");	

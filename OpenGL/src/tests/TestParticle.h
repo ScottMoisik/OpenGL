@@ -27,6 +27,7 @@ namespace Test {
 		int m_ShadowResolution = 1;
 		glm::vec3 m_Translation, m_LightPosition;
 		float m_Rotation;
+		
 		std::unique_ptr<Mesh> m_Mesh, m_MeshPlane, m_MeshLight, m_MeshBox;
 		std::unique_ptr<VertexArray> m_VAO;
 		std::unique_ptr<VertexBuffer> m_VertexBuffer;

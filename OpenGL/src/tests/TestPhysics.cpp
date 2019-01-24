@@ -16,8 +16,6 @@
 #include "physics/InertiaTensor.h"
 #include "geometry/Geometry.h"
 
-#include "WindingNumber/UT_SolidAngle.h"
-
 namespace Test {
 
 	class RigidBody{
@@ -92,23 +90,15 @@ namespace Test {
 			int numFaces = m_Mesh->GetNumFaces();
 			int* tp = (int*) &m_Mesh->GetIndices()[0];
 			int numPoints = m_Mesh->GetNumVertices();
-			;
-
-			using namespace HDK_Sample;
-			UT_Vector3T<float> fv(m_Mesh->GetPositions()[0]);
 			
 
-			//UT_SolidAngle<float, float> solidAngle(numFaces, tp, numPoints, nullptr);
-			UT_SolidAngle<float, float>* solidAngle = new UT_SolidAngle<float, float>();
-
+			
+			UT_Vector3T<float> fv(m_Mesh->GetPositions()[0]);
+			
+			
+			mySolidAngleTree.init(m_Mesh->GetNumFaces(), nullptr, m_Mesh->GetNumVertices(), nullptr);
 			int iti = 1;
-			/*
-			const int ntriangles,
-				const int *const triangle_points,
-				const int npoints,
-				const UT_Vector3T<S> *const positions,
-				const int order = 2)
-				*/
+
 		}
 
 		// Load shaders for the scene

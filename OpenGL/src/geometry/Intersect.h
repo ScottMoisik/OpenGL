@@ -114,6 +114,37 @@ public:
 		return true; // this ray hits the triangle 
 	}
 
+	bool RayTriangleIntersect(
+		const glm::vec3 &orig, const glm::vec3 &dir,
+		const glm::vec3 &v0, const glm::vec3 &v1, const glm::vec3 &v2,
+		float &t, float &u, float &v) {
+
+		glm::vec3 v0v1 = v1 - v0;
+		glm::vec3 v0v2 = v2 - v0;
+		glm::vec3 pvec = glm::cross(dir, v0v2);
+		float det = glm::dot(v0v1, pvec);
+
+		// if the determinant is negative the triangle is backfacing
+		// if the determinant is close to 0, the ray misses the triangle
+		if (det < EPS) return false;
+
+		// ray and triangle are parallel if det is close to 0
+		if (fabs(det) < EPS) return false;
+
+		float invDet = 1 / det;
+
+		glm::vec3 tvec = orig - v0;
+		u = glm::dot(tvec, pvec) * invDet;
+		if (u < 0 || u > 1) return false;
+
+		glm::vec3 qvec = glm::cross(tvec, v0v1);
+		v = glm::dot(dir, qvec) * invDet;
+		if (v < 0 || u + v > 1) return false;
+
+		t = glm::dot(v0v2, qvec) * invDet;
+
+		return true;
+	}
 
 	static bool RayPlane(const vec3 &n, const vec3 &planeOrigin, const vec3 &rayOrigin, const vec3 &rayDir, float &t) {
 		// assuming vectors are all normalized

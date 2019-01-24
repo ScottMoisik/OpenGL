@@ -7,6 +7,9 @@
 #include "Texture.h"
 
 #include "Camera.h"
+#include "WindingNumber/UT_SolidAngle.h"
+
+using namespace HDK_Sample;
 
 namespace Test {
 
@@ -23,6 +26,7 @@ namespace Test {
 	private:
 		glm::vec3 m_Translation, m_LightPosition;
 		float m_Rotation;
+		UT_SolidAngle<float, float> mySolidAngleTree;
 		std::shared_ptr<Mesh> m_Mesh, m_Arrow;
 		std::unique_ptr<VertexArray> m_VAO;
 		std::unique_ptr<VertexBuffer> m_VertexBuffer;

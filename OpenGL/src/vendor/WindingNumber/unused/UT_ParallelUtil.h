@@ -35,13 +35,14 @@ namespace UT_Thread { int getNumProcessors() {
 
 #include "tbb/blocked_range.h"
 #include "tbb/parallel_for.h"
-//namespace tbb { class split; }
+namespace tbb { class split; }
 
 /// Declare prior to use.
 template <typename T> 
 using UT_BlockedRange = tbb::blocked_range<T>;
 
 // Default implementation that calls range.size()
+
 template< typename RANGE >
 struct UT_EstimatorNumItems
 {
@@ -52,6 +53,7 @@ struct UT_EstimatorNumItems
 	return range.size();
     }
 };
+
 
 /// This is needed by UT_CoarsenedRange
 template <typename RANGE>
@@ -195,6 +197,7 @@ void UTparallelFor(
         return;
     }
 
+	/*
     size_t grain_size(min_grain_size);
     if( subscribe_ratio > 0 )
         grain_size = std::max(
@@ -205,6 +208,7 @@ void UTparallelFor(
     UT_CoarsenedRange< Range > coarsened_range(range, grain_size);
 
     tbb::parallel_for(coarsened_range, body, tbb::simple_partitioner());
+	*/
 }
 
 /// Version of UTparallelFor that is tuned for the case where the range

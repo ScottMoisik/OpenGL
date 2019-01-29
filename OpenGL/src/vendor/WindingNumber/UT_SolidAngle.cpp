@@ -24,8 +24,8 @@
  */
 
 #include "UT_SolidAngle.h"
-#include "UT_BVHImpl.h"
-
+//#include "UT_BVHImpl.h"
+#include "UT_BVH.h"
 #include "UT_SmallArray.h"
 #include "UT_FixedVector.h"
 #include "VM_SIMD.h"
@@ -45,7 +45,7 @@
 #endif
 
 #define TAYLOR_SERIES_ORDER 2
-
+using INT_TYPE = uint;
 namespace HDK_Sample {
 
 template<typename T,typename S>
@@ -139,8 +139,8 @@ void UT_SolidAngle<T,S>::init(
 #endif
     UT_SmallArray<UT::Box<S,3>> triangle_boxes;
     triangle_boxes.setSizeNoInit(ntriangles);
-    if (ntriangles < 16*1024)
-    {
+    //if (ntriangles < 16*1024)
+    //{
         const int *cur_triangle_points = triangle_points;
         for (int i = 0; i < ntriangles; ++i, cur_triangle_points += 3)
         {
@@ -149,21 +149,22 @@ void UT_SolidAngle<T,S>::init(
             box.enlargeBounds(positions[cur_triangle_points[1]]);
             box.enlargeBounds(positions[cur_triangle_points[2]]);
         }
-    }
-    else
-    {
-        UTparallelFor(UT_BlockedRange<int>(0,ntriangles), [triangle_points,&triangle_boxes,positions](const UT_BlockedRange<int> &r)
-        {
-            const int *cur_triangle_points = triangle_points + exint(r.begin())*3;
-            for (int i = r.begin(), end = r.end(); i < end; ++i, cur_triangle_points += 3)
-            {
-                UT::Box<S,3> &box = triangle_boxes[i];
-                box.initBounds(positions[cur_triangle_points[0]]);
-                box.enlargeBounds(positions[cur_triangle_points[1]]);
-                box.enlargeBounds(positions[cur_triangle_points[2]]);
-            }
-        });
-    }
+    //}
+    //else
+    //{
+		//tbb::blocked_range<INT_TYPE>& r;
+  //      //UTparallelFor(UT_BlockedRange<int>(0,ntriangles), [triangle_points,&triangle_boxes,positions](const UT_BlockedRange<int> &r)
+  //      //{
+  //          const int *cur_triangle_points = triangle_points + exint(r.begin())*3;
+  //          for (int i = r.begin(), end = r.end(); i < end; ++i, cur_triangle_points += 3)
+  //          {
+  //              UT::Box<S,3> &box = triangle_boxes[i];
+  //              box.initBounds(positions[cur_triangle_points[0]]);
+  //              box.enlargeBounds(positions[cur_triangle_points[1]]);
+  //              box.enlargeBounds(positions[cur_triangle_points[2]]);
+  //          }
+       // });
+    //}
 #if SOLID_ANGLE_TIME_PRECOMPUTE
     double time = timer.stop();
     UTdebugFormat("{} s to create bounding boxes.", time);
@@ -939,8 +940,8 @@ void UT_SubtendedAngle<T,S>::init(
 #endif
     UT_SmallArray<UT::Box<S,2>> segment_boxes;
     segment_boxes.setSizeNoInit(nsegments);
-    if (nsegments < 16*1024)
-    {
+    /*if (nsegments < 16*1024)
+    {*/
         const int *cur_segment_points = segment_points;
         for (int i = 0; i < nsegments; ++i, cur_segment_points += 2)
         {
@@ -948,20 +949,21 @@ void UT_SubtendedAngle<T,S>::init(
             box.initBounds(positions[cur_segment_points[0]]);
             box.enlargeBounds(positions[cur_segment_points[1]]);
         }
-    }
-    else
-    {
-        UTparallelFor(UT_BlockedRange<int>(0,nsegments), [segment_points,&segment_boxes,positions](const UT_BlockedRange<int> &r)
-        {
-            const int *cur_segment_points = segment_points + exint(r.begin())*2;
-            for (int i = r.begin(), end = r.end(); i < end; ++i, cur_segment_points += 2)
-            {
-                UT::Box<S,2> &box = segment_boxes[i];
-                box.initBounds(positions[cur_segment_points[0]]);
-                box.enlargeBounds(positions[cur_segment_points[1]]);
-            }
-        });
-    }
+  //  }
+  //  else
+  //  {
+		//tbb::blocked_range<INT_TYPE>& r;
+  //      //UTparallelFor(UT_BlockedRange<int>(0,nsegments), [segment_points,&segment_boxes,positions](const UT_BlockedRange<int> &r)
+  //      //{
+  //          const int *cur_segment_points = segment_points + exint(r.begin())*2;
+  //          for (int i = r.begin(), end = r.end(); i < end; ++i, cur_segment_points += 2)
+  //          {
+  //              UT::Box<S,2> &box = segment_boxes[i];
+  //              box.initBounds(positions[cur_segment_points[0]]);
+  //              box.enlargeBounds(positions[cur_segment_points[1]]);
+  //          }
+  //      //});
+  //  }
 #if SOLID_ANGLE_TIME_PRECOMPUTE
     double time = timer.stop();
     UTdebugFormat("{} s to create bounding boxes.", time);

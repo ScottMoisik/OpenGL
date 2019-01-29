@@ -93,10 +93,10 @@ namespace Test {
 			
 
 			
-			UT_Vector3T<float> fv(m_Mesh->GetPositions()[0]);
+			//UT_Vector3T<float> fv(m_Mesh->GetPositions()[0]);
 			
 			
-			mySolidAngleTree.init(m_Mesh->GetNumFaces(), nullptr, m_Mesh->GetNumVertices(), nullptr);
+			//mySolidAngleTree.init(m_Mesh->GetNumFaces(), nullptr, m_Mesh->GetNumVertices(), nullptr);
 			int iti = 1;
 
 		}

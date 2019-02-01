@@ -170,7 +170,7 @@ void UT_SolidAngle<T,S>::init(
     UTdebugFormat("{} s to create bounding boxes.", time);
     timer.start();
 #endif
-    myTree.template init<UT::BVH_Heuristic::BOX_AREA,S,3>(triangle_boxes.array(), ntriangles);
+    //myTree.template init<UT::BVH_Heuristic::BOX_AREA,S,3>(triangle_boxes.array(), ntriangles);
 #if SOLID_ANGLE_TIME_PRECOMPUTE
     time = timer.stop();
     UTdebugFormat("{} s to initialize UT_BVH structure.  {} nodes", time, myTree.getNumNodes());
@@ -701,7 +701,7 @@ void UT_SolidAngle<T,S>::init(
     const PrecomputeFunctors functors(box_data, triangle_boxes.array(), triangle_points, positions, order);
     // NOTE: post-functor relies on non-null data_for_parent, so we have to pass one.
     LocalData local_data;
-    myTree.template traverseParallel<LocalData>(4096, functors, &local_data);
+    //myTree.template traverseParallel<LocalData>(4096, functors, &local_data);
     //myTree.template traverse<LocalData>(functors);
 #if SOLID_ANGLE_TIME_PRECOMPUTE
     time = timer.stop();
@@ -855,8 +855,8 @@ T UT_SolidAngle<T, S>::computeSolidAngle(const UT_Vector3T<T> &query_point, cons
     };
     const SolidAngleFunctors functors(myData.get(), query_point, accuracy_scale2, myOrder, myPositions, myTrianglePoints);
 
-    T sum;
-    myTree.traverseVector(functors, &sum);
+    T sum = 0.0;
+    //myTree.traverseVector(functors, &sum);
     return sum;
 }
 
@@ -969,7 +969,7 @@ void UT_SubtendedAngle<T,S>::init(
     UTdebugFormat("{} s to create bounding boxes.", time);
     timer.start();
 #endif
-    myTree.template init<UT::BVH_Heuristic::BOX_AREA,S,2>(segment_boxes.array(), nsegments);
+    //myTree.template init<UT::BVH_Heuristic::BOX_AREA,S,2>(segment_boxes.array(), nsegments);
 #if SOLID_ANGLE_TIME_PRECOMPUTE
     time = timer.stop();
     UTdebugFormat("{} s to initialize UT_BVH structure.  {} nodes", time, myTree.getNumNodes());
@@ -1255,7 +1255,7 @@ void UT_SubtendedAngle<T,S>::init(
     const PrecomputeFunctors functors(box_data, segment_boxes.array(), segment_points, positions, order);
     // NOTE: post-functor relies on non-null data_for_parent, so we have to pass one.
     LocalData local_data;
-    myTree.template traverseParallel<LocalData>(4096, functors, &local_data);
+    //myTree.template traverseParallel<LocalData>(4096, functors, &local_data);
     //myTree.template traverse<LocalData>(functors);
 #if SOLID_ANGLE_TIME_PRECOMPUTE
     time = timer.stop();
@@ -1398,8 +1398,8 @@ T UT_SubtendedAngle<T, S>::computeAngle(const UT_Vector2T<T> &query_point, const
     };
     const AngleFunctors functors(myData.get(), query_point, accuracy_scale2, myOrder, myPositions, mySegmentPoints);
 
-    T sum;
-    myTree.traverseVector(functors, &sum);
+    T sum = 0.0;
+    //myTree.traverseVector(functors, &sum);
     return sum;
 }
 

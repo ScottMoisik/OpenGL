@@ -88,15 +88,25 @@ namespace Test {
 
 		{
 			int numFaces = m_Mesh->GetNumFaces();
-			int* tp = (int*) &m_Mesh->GetIndices()[0];
+			std::vector<unsigned int> inds = m_Mesh->GetIndices();
+			std::vector<float> pos = m_Mesh->GetPositions();
 			int numPoints = m_Mesh->GetNumVertices();
 			
+			//Heap allocate arrays for indices and positions
+			int* ar = NULL;
+			ar = new int[inds.size()];
+			std::copy(inds.begin(), inds.end(), ar);
 
+			HDK_Sample::UT_Vector3T<float>* fv = NULL;
+			fv = new UT_Vector3T<float>[numPoints];
+			std::copy(pos.begin(), pos.end(), fv);
+
+			mySolidAngleTree.init(m_Mesh->GetNumFaces(), ar, m_Mesh->GetNumVertices(), fv);
 			
-			//UT_Vector3T<float> fv(m_Mesh->GetPositions()[0]);
-			
-			
-			//mySolidAngleTree.init(m_Mesh->GetNumFaces(), nullptr, m_Mesh->GetNumVertices(), nullptr);
+			//Release heap allocated memory in array
+			delete[] ar;
+			ar = NULL; //Clear to prevent use of invalid memory reference
+
 			int iti = 1;
 
 		}

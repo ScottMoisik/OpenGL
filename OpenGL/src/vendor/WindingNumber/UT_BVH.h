@@ -378,11 +378,11 @@ private:
 public:
     SYS_FORCE_INLINE BVH() noexcept : myRoot(nullptr), myNumNodes(0) {}
 
-    template<BVH_Heuristic H,typename T,uint NAXES,typename BOX_TYPE,typename SRC_INT_TYPE=INT_TYPE>
-    void init(const BOX_TYPE* boxes, const INT_TYPE nboxes, SRC_INT_TYPE* indices=nullptr, bool reorder_indices=false, INT_TYPE max_items_per_leaf=1) noexcept;
+    //template<BVH_Heuristic H,typename T,uint NAXES,typename BOX_TYPE,typename SRC_INT_TYPE=INT_TYPE>
+    //void init(const BOX_TYPE* boxes, const INT_TYPE nboxes, SRC_INT_TYPE* indices=nullptr, bool reorder_indices=false, INT_TYPE max_items_per_leaf=1) noexcept;
 
-    template<BVH_Heuristic H,typename T,uint NAXES,typename BOX_TYPE,typename SRC_INT_TYPE=INT_TYPE>
-    void init(Box<T,NAXES> axes_minmax, const BOX_TYPE* boxes, INT_TYPE nboxes, SRC_INT_TYPE* indices=nullptr, bool reorder_indices=false, INT_TYPE max_items_per_leaf=1) noexcept;
+    //template<BVH_Heuristic H,typename T,uint NAXES,typename BOX_TYPE,typename SRC_INT_TYPE=INT_TYPE>
+    //void init(Box<T,NAXES> axes_minmax, const BOX_TYPE* boxes, INT_TYPE nboxes, SRC_INT_TYPE* indices=nullptr, bool reorder_indices=false, INT_TYPE max_items_per_leaf=1) noexcept;
 
     SYS_FORCE_INLINE
     INT_TYPE getNumNodes() const noexcept
@@ -413,23 +413,25 @@ public:
     ///         recurse(getnodei(child), local_data);
     /// }
     /// functors.post(nodei, parent_nodei, data_for_parent, num_children, local_data);
+	/*
     template<typename LOCAL_DATA,typename FUNCTORS>
     void traverse(
         FUNCTORS &functors,
         LOCAL_DATA *data_for_parent=nullptr) const noexcept;
-
+		*/
     /// This acts like the traverse function, except if the number of nodes in two subtrees
     /// of a node contain at least parallel_threshold nodes, they may be executed in parallel.
     /// If parallel_threshold is 0, even item_functor may be executed on items in parallel.
     /// NOTE: Make sure that your functors don't depend on the order that they're executed in,
     ///       e.g. don't add values from sibling nodes together except in post functor,
     ///       else they might have nondeterministic roundoff or miss some values entirely.
+	/*
     template<typename LOCAL_DATA,typename FUNCTORS>
     void traverseParallel(
         INT_TYPE parallel_threshold,
         FUNCTORS &functors,
         LOCAL_DATA *data_for_parent=nullptr) const noexcept;
-
+		*/
     /// For each node, this effectively does:
     /// LOCAL_DATA local_data[MAX_ORDER];
     /// uint descend = functors.pre(nodei, parent_data);
@@ -444,18 +446,22 @@ public:
     ///         recurse(getnodei(child), local_data);
     /// }
     /// functors.post(nodei, parent_nodei, data_for_parent, num_children, local_data);
+	/*
     template<typename LOCAL_DATA,typename FUNCTORS>
     void traverseVector(
         FUNCTORS &functors,
         LOCAL_DATA *data_for_parent=nullptr) const noexcept;
+		*/
 
+	/*
     /// Prints a text representation of the tree to stdout.
     void debugDump() const;
 
     template<typename SRC_INT_TYPE>
     static void createTrivialIndices(SRC_INT_TYPE* indices, const INT_TYPE n) noexcept;
-
+	*/
 private:
+	/*
     template<typename LOCAL_DATA,typename FUNCTORS>
     void traverseHelper(
         INT_TYPE nodei,
@@ -502,6 +508,7 @@ private:
 
     template<typename T,typename BOX_TYPE,typename SRC_INT_TYPE>
     static void partitionByCentre(const BOX_TYPE* boxes, SRC_INT_TYPE*const indices, const SRC_INT_TYPE*const indices_end, const uint axis, const T pivotx2, SRC_INT_TYPE*& ppivot_start, SRC_INT_TYPE*& ppivot_end) noexcept;
+	*/
 
     /// An overestimate of the number of nodes needed.
     /// At worst, we could have only 2 children in every leaf, and

@@ -24,7 +24,7 @@
  */
 
 #include "UT_SolidAngle.h"
-//#include "UT_BVHImpl.h"
+#include "UT_BVHImpl.h"
 #include "UT_BVH.h"
 #include "UT_SmallArray.h"
 #include "UT_FixedVector.h"
@@ -49,10 +49,8 @@ using INT_TYPE = uint;
 namespace HDK_Sample {
 
 template<typename T,typename S>
-struct UT_SolidAngle<T,S>::BoxData
-{
-    void clear()
-    {
+struct UT_SolidAngle<T,S>::BoxData {
+    void clear() {
         // Set everything to zero
         memset(this,0,sizeof(*this));
     }
@@ -170,7 +168,7 @@ void UT_SolidAngle<T,S>::init(
     UTdebugFormat("{} s to create bounding boxes.", time);
     timer.start();
 #endif
-    //myTree.template init<UT::BVH_Heuristic::BOX_AREA,S,3>(triangle_boxes.array(), ntriangles);
+    myTree.template init<UT::BVH_Heuristic::BOX_AREA,S,3>(triangle_boxes.array(), ntriangles);
 #if SOLID_ANGLE_TIME_PRECOMPUTE
     time = timer.stop();
     UTdebugFormat("{} s to initialize UT_BVH structure.  {} nodes", time, myTree.getNumNodes());
@@ -984,8 +982,7 @@ void UT_SubtendedAngle<T,S>::init(
     myData.reset(box_data);
 
     // Some data are only needed during initialization.
-    struct LocalData
-    {
+    struct LocalData {
         // Bounding box
         UT::Box<S,2> myBox;
 
@@ -1006,8 +1003,7 @@ void UT_SubtendedAngle<T,S>::init(
         T my2Nyyx_Nxyy;     // Nyyx+Nyxy+Nxyy = 2Nyyx+Nxyy
     };
 
-    struct PrecomputeFunctors
-    {
+    struct PrecomputeFunctors {
         BoxData *const myBoxData;
         const UT::Box<S,2> *const mySegmentBoxes;
         const int *const mySegmentPoints;
@@ -1026,12 +1022,11 @@ void UT_SubtendedAngle<T,S>::init(
             , myPositions(positions)
             , myOrder(order)
         {}
-        constexpr SYS_FORCE_INLINE bool pre(const int nodei, LocalData *data_for_parent) const
-        {
+        constexpr SYS_FORCE_INLINE bool pre(const int nodei, LocalData *data_for_parent) const {
             return true;
         }
-        void item(const int itemi, const int parent_nodei, LocalData &data_for_parent) const
-        {
+
+        void item(const int itemi, const int parent_nodei, LocalData &data_for_parent) const {
             const UT_Vector2T<S> *const positions = myPositions;
             const int *const cur_segment_points = mySegmentPoints + 2*itemi;
             const UT_Vector2T<T> a = positions[cur_segment_points[0]];
@@ -1071,8 +1066,7 @@ void UT_SubtendedAngle<T,S>::init(
                 return;
 
             // If it's zero-length, the results are zero, so we can skip.
-            if (length == 0)
-            {
+            if (length == 0) {
                 data_for_parent.myNijkDiag = T(0);
                 data_for_parent.my2Nxxy_Nyxx = 0;
                 data_for_parent.my2Nyyx_Nxyy = 0;
@@ -1096,8 +1090,7 @@ void UT_SubtendedAngle<T,S>::init(
 #endif
         }
 
-        void post(const int nodei, const int parent_nodei, LocalData *data_for_parent, const int nchildren, const LocalData *child_data_array) const
-        {
+        void post(const int nodei, const int parent_nodei, LocalData *data_for_parent, const int nchildren, const LocalData *child_data_array) const {
             // NOTE: Although in the general case, data_for_parent may be null for the root call,
             //       this functor assumes that it's non-null, so the call below must pass a non-null pointer.
 
@@ -1111,8 +1104,7 @@ void UT_SubtendedAngle<T,S>::init(
             const UT_Vector2T<T> local_P = child_data_array[0].myAverageP;
             ((T*)&current_box_data.myAverageP[0])[0] = local_P[0];
             ((T*)&current_box_data.myAverageP[1])[0] = local_P[1];
-            for (int i = 1; i < nchildren; ++i)
-            {
+            for (int i = 1; i < nchildren; ++i) {
                 const UT_Vector2T<T> local_N = child_data_array[i].myN;
                 N += local_N;
                 ((T*)&current_box_data.myN[0])[i] = local_N[0];
@@ -1123,8 +1115,7 @@ void UT_SubtendedAngle<T,S>::init(
                 ((T*)&current_box_data.myAverageP[0])[i] = local_P[0];
                 ((T*)&current_box_data.myAverageP[1])[i] = local_P[1];
             }
-            for (int i = nchildren; i < BVH_N; ++i)
-            {
+            for (int i = nchildren; i < BVH_N; ++i) {
                 // Set to zero, just to avoid false positives for uses of uninitialized memory.
                 ((T*)&current_box_data.myN[0])[i] = 0;
                 ((T*)&current_box_data.myN[1])[i] = 0;
@@ -1149,23 +1140,21 @@ void UT_SubtendedAngle<T,S>::init(
 
             data_for_parent->myBox = box;
 
-            for (int i = 0; i < nchildren; ++i)
-            {
+            for (int i = 0; i < nchildren; ++i) {
                 const UT::Box<S,2> &local_box(child_data_array[i].myBox);
                 const UT_Vector2T<T> &local_P = child_data_array[i].myAverageP;
                 const UT_Vector2T<T> maxPDiff = SYSmax(local_P-UT_Vector2T<T>(local_box.getMin()), UT_Vector2T<T>(local_box.getMax())-local_P);
                 ((T*)&current_box_data.myMaxPDist2)[i] = maxPDiff.length2();
             }
-            for (int i = nchildren; i < BVH_N; ++i)
-            {
+
+            for (int i = nchildren; i < BVH_N; ++i) {
                 // This child is non-existent.  If we set myMaxPDist2 to infinity, it will never
                 // use the approximation, and the traverseVector function can check for EMPTY.
                 ((T*)&current_box_data.myMaxPDist2)[i] = std::numeric_limits<T>::infinity();
             }
 
             const int order = myOrder;
-            if (order >= 1)
-            {
+            if (order >= 1) {
                 // We now have the current box's P, so we can adjust Nij and Nijk
                 data_for_parent->myNijDiag = child_data_array[0].myNijDiag;
                 data_for_parent->myNxy = 0;
@@ -1174,8 +1163,7 @@ void UT_SubtendedAngle<T,S>::init(
                 data_for_parent->my2Nxxy_Nyxx = child_data_array[0].my2Nxxy_Nyxx;
                 data_for_parent->my2Nyyx_Nxyy = child_data_array[0].my2Nyyx_Nxyy;
 
-                for (int i = 1; i < nchildren; ++i)
-                {
+                for (int i = 1; i < nchildren; ++i) {
                     data_for_parent->myNijDiag += child_data_array[i].myNijDiag;
                     data_for_parent->myNijkDiag += child_data_array[i].myNijkDiag;
                     data_for_parent->my2Nxxy_Nyxx += child_data_array[i].my2Nxxy_Nyxx;
@@ -1188,8 +1176,7 @@ void UT_SubtendedAngle<T,S>::init(
                     ((T*)&current_box_data.myNijkDiag[j])[0] = child_data_array[0].myNijkDiag[j];
                 ((T*)&current_box_data.my2Nxxy_Nyxx)[0] = child_data_array[0].my2Nxxy_Nyxx;
                 ((T*)&current_box_data.my2Nyyx_Nxyy)[0] = child_data_array[0].my2Nyyx_Nxyy;
-                for (int i = 1; i < nchildren; ++i)
-                {
+                for (int i = 1; i < nchildren; ++i) {
                     for (int j = 0; j < 2; ++j)
                         ((T*)&current_box_data.myNijDiag[j])[i] = child_data_array[i].myNijDiag[j];
                     ((T*)&current_box_data.myNxy_Nyx)[i] = child_data_array[i].myNxy + child_data_array[i].myNyx;
@@ -1198,8 +1185,7 @@ void UT_SubtendedAngle<T,S>::init(
                     ((T*)&current_box_data.my2Nxxy_Nyxx)[i] = child_data_array[i].my2Nxxy_Nyxx;
                     ((T*)&current_box_data.my2Nyyx_Nxyy)[i] = child_data_array[i].my2Nyyx_Nxyy;
                 }
-                for (int i = nchildren; i < BVH_N; ++i)
-                {
+                for (int i = nchildren; i < BVH_N; ++i) {
                     // Set to zero, just to avoid false positives for uses of uninitialized memory.
                     for (int j = 0; j < 2; ++j)
                         ((T*)&current_box_data.myNijDiag[j])[i] = 0;
@@ -1210,8 +1196,7 @@ void UT_SubtendedAngle<T,S>::init(
                     ((T*)&current_box_data.my2Nyyx_Nxyy)[i] = 0;
                 }
 
-                for (int i = 0; i < nchildren; ++i)
-                {
+                for (int i = 0; i < nchildren; ++i) {
                     const LocalData &child_data = child_data_array[i];
                     UT_Vector2T<T> displacement = child_data.myAverageP - UT_Vector2T<T>(data_for_parent->myAverageP);
                     UT_Vector2T<T> N = child_data.myN;
@@ -1224,8 +1209,7 @@ void UT_SubtendedAngle<T,S>::init(
                     data_for_parent->myNxy += Nxy;
                     data_for_parent->myNyx += Nyx;
 
-                    if (order >= 2)
-                    {
+                    if (order >= 2) {
                         // Adjust Nijk for the change in centre P
                         data_for_parent->myNijkDiag += T(2)*displacement*child_data.myNijDiag + displacement*displacement*child_data.myN;
                         data_for_parent->my2Nxxy_Nyxx +=
@@ -1264,8 +1248,7 @@ void UT_SubtendedAngle<T,S>::init(
 }
 
 template<typename T,typename S>
-void UT_SubtendedAngle<T, S>::clear()
-{
+void UT_SubtendedAngle<T, S>::clear() {
     myTree.clear();
     myNBoxes = 0;
     myOrder = 2;
@@ -1277,8 +1260,7 @@ void UT_SubtendedAngle<T, S>::clear()
 }
 
 template<typename T,typename S>
-T UT_SubtendedAngle<T, S>::computeAngle(const UT_Vector2T<T> &query_point, const T accuracy_scale) const
-{
+T UT_SubtendedAngle<T, S>::computeAngle(const UT_Vector2T<T> &query_point, const T accuracy_scale) const {
     const T accuracy_scale2 = accuracy_scale*accuracy_scale;
 
     struct AngleFunctors

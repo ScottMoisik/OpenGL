@@ -532,6 +532,7 @@
     <ClInclude Include="src\vendor\WindingNumber\UT_Array.h" />
     <ClInclude Include="src\vendor\WindingNumber\UT_ArrayImpl.h" />
     <ClInclude Include="src\vendor\WindingNumber\UT_BVH.h" />
+    <ClInclude Include="src\vendor\WindingNumber\UT_BVHImpl.h" />
     <ClInclude Include="src\vendor\WindingNumber\UT_FixedVector.h" />
     <ClInclude Include="src\vendor\WindingNumber\UT_SmallArray.h" />
     <ClInclude Include="src\vendor\WindingNumber\UT_SolidAngle.h" />

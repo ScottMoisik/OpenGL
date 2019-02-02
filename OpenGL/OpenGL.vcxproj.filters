@@ -1359,5 +1359,8 @@
     <ClInclude Include="src\vendor\WindingNumber\UT_BVH.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\vendor\WindingNumber\UT_BVHImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

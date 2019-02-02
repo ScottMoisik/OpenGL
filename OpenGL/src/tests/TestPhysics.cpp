@@ -108,7 +108,11 @@ namespace Test {
 			}
 
 			mySolidAngleTree.init(m_Mesh->GetNumFaces(), ar, m_Mesh->GetNumVertices(), fv);
-			
+
+			float qpVals[] = { 100.0f, 100.0f, 100.0f };
+			HDK_Sample::UT_Vector3T<float> qp(qpVals);
+			float solidAngle = mySolidAngleTree.computeSolidAngle(qp, 2.0f);
+
 			//Release heap allocated memory in array
 			delete[] ar;
 			ar = NULL; //Clear to prevent use of invalid memory reference

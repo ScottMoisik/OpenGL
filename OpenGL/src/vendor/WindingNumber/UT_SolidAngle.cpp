@@ -854,7 +854,7 @@ T UT_SolidAngle<T, S>::computeSolidAngle(const UT_Vector3T<T> &query_point, cons
     const SolidAngleFunctors functors(myData.get(), query_point, accuracy_scale2, myOrder, myPositions, myTrianglePoints);
 
     T sum = 0.0;
-    //myTree.traverseVector(functors, &sum);
+    myTree.traverseVector(functors, &sum);
     return sum;
 }
 

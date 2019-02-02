@@ -99,7 +99,13 @@ namespace Test {
 
 			HDK_Sample::UT_Vector3T<float>* fv = NULL;
 			fv = new UT_Vector3T<float>[numPoints];
-			std::copy(pos.begin(), pos.end(), fv);
+
+			for (int nIdx = 0; nIdx < numPoints; nIdx++) {
+				float vec[] = { pos[nIdx * 3], pos[nIdx * 3 + 1], pos[nIdx * 3 + 2] };
+				
+				HDK_Sample::UT_Vector3T<float> t(vec);
+				fv[nIdx] = t;
+			}
 
 			mySolidAngleTree.init(m_Mesh->GetNumFaces(), ar, m_Mesh->GetNumVertices(), fv);
 			
